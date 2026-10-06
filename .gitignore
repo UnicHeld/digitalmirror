@@ -1,0 +1,30 @@
+# Python e ferramentas
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Dados pessoais de runtime e segredos
+*.sqlite
+*.sqlite3
+*.db
+*-wal
+*-shm
+*.log
+.env
+.env.*
+!.env.example
+data/
+runtime/
+exports/
+backups/
+config.local.*
+*.token
