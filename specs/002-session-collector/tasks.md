@@ -10,7 +10,8 @@
 - [x] US-02.1: registrar evidência fornecida pelo usuário de leitura real via Compose de X11/GNOME e dois monitores, sem logs pessoais.
 - [x] US-02.3: registrar polling real informado pelo usuário (12 amostras/5s), com disponibilidade estável e CPU de 1,137% acima da referência RNF-03.
 - [x] US-02.2: registrar entrega real de dois ciclos GNOME no watcher de 120s durante ensaio manual Windows+L, sem inferir quantidade de bloqueios efetivos.
-- [ ] US-02.2: bloquear/desbloquear e suspender/retomar manualmente no GNOME real.
+- [x] US-02.2: suspensão/retomada voluntárias no GNOME com um par PrepareForSleep ordenado e saída final após retorno, informados pelo usuário.
+- [ ] US-02.2: correlacionar ações/ciclos de bloqueio, comparar GetActive/LockedHint da sessão e revalidar fontes após retomada.
 - [ ] US-02.3: polling com fontes gráficas saudáveis e precisão de transição medida.
 - [ ] US-02.3: confirmar ambiente gráfico e início único após login/logout reais.
 - [ ] US-02.4: prova real com duas janelas/perfis e metadados da extensão.
@@ -32,6 +33,8 @@ passou em Python 3.11/3.13, com 40 testes e imagens dev/runtime. Issue #2/Projec
 sincronizados: US-02.1 concluída, EP-02 In Progress e ensaios reais ainda pendentes.
 Resultados posteriores do terminal: dez fontes disponíveis 12/12; GNOME recebeu
 dois ciclos completos durante ensaio manual. Correlação com quantidade de ações
-pendente, sem comparação LockedHint/GetActive bloqueado. PrepareForSleep sem
-eventos; suspensão ainda não testada. RNF-03 não atendida na janela curta de
+pendente, sem comparação LockedHint/GetActive bloqueado. Ensaio posterior de
+180s com suspensão/retomada manual recebeu um ciclo completo logind e um GNOME,
+sem duplicatas/bordas pendentes; fontes X11/GetActive após retorno não revalidadas.
+RNF-03 não atendida na janela curta de
 polling (1,137% > 1%); estabilidade de 8h, foco, perfis, autostart e C0 pendentes.

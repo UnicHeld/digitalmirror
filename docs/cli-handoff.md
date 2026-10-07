@@ -27,8 +27,9 @@ Este ambiente Debian 12/Python 3.11 acessa logind, mas não recebeu DISPLAY,
 D-Bus de sessão ou identificação da sessão gráfica. O terminal do usuário já
 confirmou leitura de X11/GNOME e dois monitores via Compose (evidência abaixo).
 Watcher GNOME com ciclos durante bloqueio manual já foi observado; correlação
-com a quantidade de ações, LockedHint, sleep/resume, precisão de foco/monitor,
-dois perfis e autostart real continuam pendentes.
+com a quantidade de ações, LockedHint, fontes após retomada, precisão de
+foco/monitor, dois perfis e autostart real continuam pendentes. Um par real de
+PrepareForSleep foi recebido durante suspensão/retomada manual (evidência abaixo).
 Não iniciar EP-03 nem declarar C0 atingido antes desses ensaios.
 
 Continuação publicada do EP-02 no commit `dfe2a24`: ADR-008 e resumo ordenado
@@ -54,9 +55,15 @@ de ≤1%; não declarar meta de CPU atendida nem RNF de 8h validadas.
 Watcher de 120s após ação manual Windows+L: GNOME com dois pares true → false,
 zero duplicatas/bordas pendentes e cycle_status=complete. Quantidade de ações
 manuais ainda precisa corresponder aos ciclos; LockedHint não foi comparado.
-PrepareForSleep sem eventos: suspensão não testada nesse ensaio.
-Próximo passo: watcher isolado com suspensão/retomada manual e correlação dos
-ciclos GNOME conforme o protocolo. Degraded/retorno 1 é esperado quando
+PrepareForSleep sem eventos no primeiro watcher; ensaio posterior de 180s com
+suspensão/retomada manual recebeu um ciclo completo logind e um GNOME, zero
+duplicatas/bordas pendentes. O usuário informou aproximadamente 10s suspenso e
+saída JSON do mesmo comando após retorno; duração suspensa não é medida pelo
+resumo nem entra nos 180,004s monotônicos. A amostra X11/GetActive antecede o
+watcher e não comprova revalidação de todas as fontes após retomada.
+Próximos passos: revalidar fontes após retorno, comparar lock com fonte validada
+e correlacionar os dois ciclos Windows+L com ações manuais; depois, precisão,
+perfis e integração gráfica conforme o protocolo. Degraded/retorno 1 é esperado quando
 falta o ID e LockedHint fica indisponível; não escolher um ID arbitrário.
 O agente continua sem ambiente gráfico herdado e não executou esses ensaios reais.
 

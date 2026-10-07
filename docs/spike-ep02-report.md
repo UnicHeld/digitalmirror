@@ -311,3 +311,42 @@ continuidade após retorno. Dois perfis, precisão de foco, autostart e C0 pende
 Os 30,689% de CPU da segunda saída se referem somente à amostra inicial de
 197,212ms; **não** medem o custo do watcher de 120s. pending_validation é uma lista
 estática de limites do spike, sem atualização automática pelo resumo de ciclos.
+
+## Suspensão/retomada real enviada pelo usuário — 06/10/2026 local
+
+Ensaio via `sh scripts/compose-desktop run --rm desktop digitalmirror doctor
+--watch-seconds 180`. O usuário informou esperar cerca de 5s antes de suspender
+pelo GNOME, permanecer aproximadamente 10s suspenso e, após retomar, aguardar o
+JSON do mesmo comando. A amostra inicial foi observada às 01:36:33 UTC de
+07/10/2026 (22:36:33 local de 06/10); não é o horário do fim do watcher.
+Evidência fornecida pelo usuário; nenhum JSON bruto ou log de sessão versionado.
+
+| Fonte | Sinais e ciclos informados | Resultado |
+| --- | --- | --- |
+| logind PrepareForSleep | true=1, false=1, complete_count=1 | observed / complete |
+| GNOME ActiveChanged | true=1, false=1, complete_count=1 | observed / complete |
+
+Ambas as fontes registraram zero duplicatas, zero fins sem início e nenhum início
+pendente. Entrega de um par ordenado PrepareForSleep durante a ação voluntária
+de suspensão/retomada **confirmada neste ensaio**. O processo concluiu a observação
+e produziu JSON após o retorno, conforme relato do usuário. O par GNOME é
+compatível com ativação/desativação da tela de bloqueio nessa sequência, mas não
+determina ordem entre fontes nem comprova LockedHint ou momento do desbloqueio.
+
+O watcher mediu 180,003885s monotônicos. No Linux, o relógio utilizado não inclui
+tempo suspenso; aproximadamente 10s suspensos podem acrescentar tempo ao relógio
+de parede. O resumo não mede a duração da suspensão: os 10s são estimativa manual.
+A retomada até a saída final não comprova revalidação de X11, GNOME GetActive,
+monitores ou estado gráfico: o polling ocorreu somente antes do watcher. Não há
+coletor persistente instalado para validar intervalos/gaps após suspensão.
+
+Dez fontes disponíveis na amostra inicial; LockedHint segue indisponível por
+missing-graphical-session-id e mantém degraded/1. Os 24,558% de CPU referem-se
+apenas à amostra inicial de 161,964ms, sem incluir watcher/suspensão. Os resultados
+de CPU média válidos para polling continuam os do ensaio de 12 amostras acima.
+pending_validation permanece estática e não invalida o par real agora observado.
+
+US-02.2: ação manual de suspensão/retomada e entrega do par observadas; correlação
+dos dois ciclos Windows+L anteriores, comparação LockedHint/GetActive e
+revalidação das fontes após retomada continuam pendentes. US-02.3/04, precisão
+de foco, autostart, perfis, RNF de 8h e C0 não encerrados por esse ensaio.
