@@ -33,8 +33,8 @@ class Check:
     status: str
     reason: str
     fallback: str
-    # Apenas contagens/booleans sanitizados, nunca metadados da janela/sessão.
-    details: dict[str, bool | int] | None = None
+    # Apenas contagens/booleans/enums sanitizados, nunca metadados brutos da sessão.
+    details: dict[str, bool | int | str] | None = None
 
 
 Runner = Callable[[list[str]], CommandResult]
@@ -281,9 +281,10 @@ def read_lock_checks(env: Mapping[str, str], runner: Runner = run_readonly) -> l
                 active = value
             except (ValueError, TypeError):
                 reason = "invalid-response"
-    details: dict[str, bool | int] = {
+    details: dict[str, bool | int | str] = {
         "session_validated": session.path is not None,
         "resolved_from_user_display": session.from_user_display,
+        **session.diagnostics,
     }
     if active is not None:
         details["active"] = active
@@ -385,7 +386,7 @@ def collect_checks(env: Mapping[str, str], runner: Runner = run_readonly) -> lis
             )
         )
         result = runner(["xrandr", "--listactivemonitors"])
-        details = None
+        details: dict[str, bool | int | str] | None = None
         if not result.reason:
             try:
                 monitors = parse_monitors(result.output)

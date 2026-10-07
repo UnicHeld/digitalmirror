@@ -31,6 +31,17 @@
 12. Consultas de lock a cada 5s durante watcher; revalidações por par de retomada
     e fim. Contagens sanitizadas e falhas persistentes no status; testes sintéticos
     e integração de streams reais, seguidos por ensaio manual no terminal gráfico.
+13. Instrumentar SessionResolution e logind-lock.details com proveniência,
+    comparações booleanas, categoria de DISPLAY e relação entre UIDs sanitizadas.
+    Preservar motivo agregado e validação; testar rejeições individuais/múltiplas,
+    erros de consulta/parse, saída privada e UID interno rootless. Reconstruir
+    imagens, executar checks via Compose e repetir doctor no terminal real antes
+    de qualquer correção de associação ou ensaio lock/retomada.
+14. Resultado real de 07/10: somente Session.Display vazio impede associação.
+    Manter validação; executar ensaios existentes pelo fallback GNOME, sem novos
+    comandos/fontes ou alterações de login. Documentar comparação logind ausente
+    e status degraded esperado; correlacionar um ciclo de bloqueio com uma ação
+    manual antes do ensaio separado de suspensão/retomada (ADR-010).
 
 ADRs existentes preservados. ADR-006 limita uso de subprocessos ao spike.
 Testes substituem o runner para cenários sintéticos; subprocessos reais só no doctor.

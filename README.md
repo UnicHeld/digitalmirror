@@ -2,7 +2,7 @@
 
 Observador pessoal e passivo de presença digital para **Debian 12 + GNOME + X11**, com dashboard local.
 
-**Estado:** EP-01 implementado: contratos, ADRs, fixtures sintéticas e CI. EP-02 em andamento: CLI `doctor` passiva e relatório inicial. Coleta contínua, banco, API e dashboard ainda não foram implementados. Ensaios gráficos reais permanecem pendentes; C0 ainda não foi atingido.
+**Estado:** EP-01 implementado: contratos, ADRs, fixtures sintéticas e CI. EP-02 em andamento: CLI `doctor` passiva, diagnóstico de identidade e ensaios reais de bloqueio/suspensão aceitos no escopo do spike com fallback GNOME. Coleta contínua, banco, API e dashboard ainda não foram implementados. Foco/monitores, perfis, login/logout e decisão final de adaptadores permanecem pendentes; C0 ainda não foi atingido.
 
 ## O que será medido
 

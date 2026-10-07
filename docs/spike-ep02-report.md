@@ -424,3 +424,257 @@ Primeiro passo ao retomar: motivos de divergência e proveniência sanitizados,
 regressões, investigação da associação real e repetição do doctor; depois watchers
 de lock/retomada e etapas de foco/perfis/login/logout. Handoff em docs/cli-handoff.md.
 EP-02 In Progress, US-02.2 parcial, C0 pendente e EP-03 Backlog.
+
+## Retomada de 07/10/2026 — instrumentação de identidade
+
+Implementada extensão sanitizada do ADR-010, mantendo seleção do candidato,
+validação e reason=session-identity-mismatch. logind-lock.details informa
+candidate_source inclusive em falhas, seis comparações booleanas após parse
+tipado completo, categoria de Display e relação entre UID interno e UID do host.
+Não imprime valores de identidade nem acrescenta consultas/mounts. Regressões
+cobrem divergências individuais/múltiplas, Display vazio/não local/outro servidor,
+falhas nos estágios de consulta, tipos inválidos, privacidade e UID interno
+rootless. O caminho User.Display conserva proveniência também após rejeição.
+
+Ambiente do agente: Docker rootless, sem variáveis de sessão gráfica herdadas.
+A captura fornecida pelo usuário informa Debian 12/GNOME 43.9 e duas resoluções;
+não permite determinar qual atributo divergiu. Nenhuma nova evidência de
+identidade logind, LockedHint real, lock/unlock ou retomada foi recebida nesta etapa.
+
+Validação em Docker Compose/Python 3.11:
+
+- `sh scripts/compose run --rm dev ruff format .`: executado, um arquivo formatado.
+- `sh scripts/compose run --rm dev`: formatter check, lint, mypy, 57 testes e
+  sdist/wheel aprovados; repetido na imagem reconstruída, também aprovado.
+- Primeiras tentativas dos checks pararam em lint (duas capturas de variáveis
+  nos testes) e mypy (inferência do dict de monitores ao ampliar details para enums);
+  falhas corrigidas antes da aprovação.
+- `sh scripts/compose build dev desktop`: primeira tentativa bloqueada pelo
+  sandbox ao escrever metadados de Buildx em ~/.docker; repetição autorizada
+  concluiu ambas as imagens.
+- `sh scripts/compose run --rm dev digitalmirror doctor` e
+  `sh scripts/compose --profile desktop run --rm desktop`: sem mounts de sessão,
+  retornaram degraded/código 1 esperado; logind-lock sem sessão X11 confirmada,
+  session_validated=false e candidate_source=not-attempted. Confirmam execução
+  da extensão na CLI/imagem, sem validar as fontes reais ou consumo contínuo.
+
+Pendência: doctor simples no terminal GNOME/X11 e análise do objeto logind-lock
+antes de corrigir associação. Depois, watchers separados de lock (120s, ≥15s
+bloqueado/desbloqueado) e suspensão/retomada (180s), conforme protocolo. Sem nova
+CI remota ou ensaio gráfico deste incremento; alterações locais sem commit/push.
+EP-02 e C0 continuam pendentes; EP-03 não iniciado.
+
+## Doctor instrumentado real — 07/10/2026, 19:32 local
+
+Resultado informado pelo usuário de `sh scripts/compose-desktop run --rm desktop`,
+observed_at=22:32:01.948195 UTC (19:32:01 local). Sem JSON bruto versionado.
+
+Dez fontes read-ok; GNOME GetActive=false. XRandR informa um monitor, principal,
+com janela atribuída. Evidências anteriores de dois monitores são preservadas;
+não inferir causa da diferença nem configuração física pela captura anterior.
+
+logind-lock indisponível por session-identity-mismatch, com proveniência
+candidate_source=user-display. Id, UID do host, tipo x11, classe user e Remote=false
+confirmados; somente identity_display_matches=false, com session_display_status=empty.
+Portanto, a comparação que rejeitou o candidato foi Session.Display vazio; não
+foi demonstrado um nome de servidor diferente. Não houve consulta de LockedHint
+de sessão validada. resolved_from_user_display=false conserva semântica de sucesso
+e não contradiz a proveniência user-display.
+
+process_uid_is_root=true e host_uid_matches_process_uid=false são coerentes com
+o rootless do launcher; identity_uid_matches=true confirma comparação com o UID
+real fornecido. Não há evidência de uso incorreto do UID interno para associação.
+
+Uma amostra, janela 0,172335s, latência p95 0,172185s, atraso 0,000068s; CPU própria
+0,015008s e filhos 0,067156s, 47,677% de um núcleo nessa janela sem espera de polling.
+RSS próprio e maior filho 19.224 KiB cada. Não é CPU média contínua nem soak RNF.
+Sem watcher nesta saída, não valida transições, comparação ou revalidação.
+
+Verificação documental: o [manual logind do Debian 12](https://manpages.debian.org/bookworm/systemd/org.freedesktop.login1.5.en.html)
+distingue User.Display (ID/path de sessão primária) de Session.Display (nome X11).
+SetDisplay é atribuição do controlador da sessão; LockedHint reflete hint informado
+pelo desktop. A documentação não determina a causa upstream da propriedade vazia
+neste host. Não atribuir a PAM, GDM ou Docker sem investigação adicional.
+
+Decisão no ADR-010: preservar validação e fonte logind-lock indisponível;
+continuar pelo fallback GNOME já implementado. Não alterar sistema/login ou
+fabricar Session.Display. Próximo aceite: um bloqueio/desbloqueio manual correlacionado
+a ciclo GNOME e consultas true/false, seguido de suspensão/retomada com revalidações.
+comparison_counts.unavailable e diagnóstico degraded são esperados; comparação
+com LockedHint continua não validada. Falha GNOME conserva bloqueio desconhecido.
+
+Esta continuação alterou somente documentação (ADR-010, spec/plan/tasks, protocolo,
+relatório e handoff); código/testes preservados. Checks Python/Compose de 57 testes
+pertencem ao incremento anterior; não repetidos nesta atualização documental.
+Watchers reais novos e CI remota pendentes; sem commit/push. C0 não atingido.
+
+## Watcher instrumentado de lock — 07/10/2026, 20:01 local
+
+Resultado fornecido pelo usuário de
+`sh scripts/compose-desktop run --rm desktop digitalmirror doctor --watch-seconds 120`.
+observed_at=23:01:16.208311 UTC (20:01:16 local) identifica a amostra inicial,
+não o fim do watcher. Duração monotônica observada: 120,003736s.
+Resumo sanitizado, sem JSON bruto ou história pessoal versionados.
+
+GNOME ActiveChanged recebeu true=1 e false=1: um ciclo completo, nenhum início
+pendente, zero fins sem início e zero duplicatas. Status observed/cycle_status=complete,
+sem falha de conexão reportada. GetActive foi consultado 24 vezes com read-ok
+24/24; true=7 e false=17. As duas condições foram amostradas, mas as contagens não
+medem duração de bloqueio e não comprovam a ação real sem relato do usuário.
+
+logind-lock indisponível 24/24 por session-identity-mismatch; comparison_counts
+unavailable=24. Na amostra inicial e post_watch_checks, o candidato user-display
+passou em Id/UID/Type/Class/Remote, mas Session.Display continuou vazio. Nenhuma
+comparação com LockedHint foi validada. O diagnóstico e state_observation
+permanecem degraded pela fonte indisponível esperada.
+
+post_watch_checks: dez fontes read-ok, incluindo foco/classe/PID/workspace/
+geometria/idle X11, GNOME=false, introspecção PrepareForSleep e alvo gráfico.
+XRandR com um monitor principal e janela atribuída. A leitura ao fim comprova
+disponibilidade naquele instante; não demonstra foco contínuo durante bloqueio.
+post_watch_status=degraded somente por logind-lock indisponível.
+
+PrepareForSleep sem eventos, zero ciclos e cycle_status=no-events;
+resume_revalidation.confirmed_signal_pairs=0, sem contagens de revalidação.
+Esse ensaio não valida suspensão/retomada.
+
+Medição inicial de uma amostra: janela 0,139930s e CPU de 48,211% de um núcleo;
+RSS próprio e maior filho 19.232 KiB cada. Não inclui custo dos 120s do watcher
+nem constitui CPU média de polling/soak.
+
+Aceite parcial: ciclo, estados true/false e leitura final coerentes com o protocolo
+de fallback GNOME. Falta confirmar que houve exatamente um bloqueio efetivo e um
+desbloqueio manual, ≥15s em cada estado, terminando desbloqueado. Confirmação
+solicitada; não inferir as ações pelo comando ou pelos sinais. Próximo ensaio:
+suspensão/retomada separada de 180s, com relato e conferência de resume_revalidation
+e post_watch_checks. Nenhuma fonte logind foi liberada nem critério alterado.
+
+Atualizados relatório, handoff e checklist; código preservado. Validação desta
+atualização somente documental: git diff --check. Checks Python e build não
+repetidos; 57 testes aprovados anteriormente pertencem à instrumentação.
+CI remota deste incremento não executada; sem commit/push. C0 e EP-02 pendentes.
+
+## Relato de lock e watcher de suspensão — 07/10/2026, 20:05 local
+
+O usuário respondeu afirmativamente sobre o primeiro ensaio: uma ação, espera de
+aproximadamente 15s, retorno e espera pela saída. O atalho foi descrito como Ctrl+L.
+Esclarecimento solicitado sobre tela de bloqueio GNOME/autenticação versus limpeza
+do terminal. O relato não será reescrito como Windows+L; aceite do fallback de lock
+permanece pendente dessa distinção. Ciclo e consultas do ensaio anterior preservados.
+
+Para o segundo ensaio, o usuário informou suspensão manual, espera de cerca de 15s
+e retomada, usando
+`sh scripts/compose-desktop run --rm desktop digitalmirror doctor --watch-seconds 180`.
+observed_at=23:05:42.384198 UTC (20:05:42 local) é timestamp da amostra inicial.
+Duração monotônica 180,006353s; aproximadamente 15s suspenso vêm do relato, não
+do watcher. O comando produziu a saída após retorno. Sem JSON bruto versionado.
+
+PrepareForSleep e GNOME ActiveChanged: cada stream recebeu true=1/false=1, um ciclo
+completo, zero duplicatas/fins sem início e nenhum início pendente. Status observed
+e cycle_status=complete nos dois streams, sem falha de conexão reportada.
+Não inferir ordem entre streams, instante/duração de bloqueio ou bloqueio automático
+na retomada sem relato: o resumo só preserva a ordem interna de cada fonte.
+
+GetActive read-ok em 35/35 consultas, true=2/false=33; logind-lock indisponível
+35/35 por session-identity-mismatch, comparison_counts.unavailable=35. A consulta
+inicial e final confirmam novamente cinco atributos de identidade, mas Display
+vazio impede associação. Sem LockedHint validado nem comparação de fontes.
+
+resume_revalidation.confirmed_signal_pairs=1 confirma acionamento da consulta
+de todas as fontes após par PrepareForSleep. Resultado dessa leitura:
+
+| Fontes | Na revalidação de retomada | Ao fim do watcher |
+| --- | --- | --- |
+| x11-focus | available, no-focused-window | available, read-ok |
+| window-class/PID/workspace/geometry | unavailable, no-focused-window | available, read-ok |
+| idle/XRandR/GNOME/PrepareForSleep/alvo gráfico | available, read-ok | available, read-ok |
+| logind-lock | unavailable, session-identity-mismatch | unavailable, mesmo motivo |
+
+A ausência de janela focada é resposta válida do adaptador X11, não timeout,
+erro de conexão ou reutilização de foco antigo. O código torna propriedades da
+janela indisponíveis nessa condição e conserva degraded em state_observation mesmo
+após recuperação. É compatível com uma transição de retomada; o resumo não permite
+afirmar se a leitura ocorreu durante tela bloqueada ou outra etapa da transição.
+Na coleta futura, ausência de app conserva app desconhecido sem invalidar por si
+um estado de sessão confirmado; não inventar presença quando lock/idle faltarem.
+
+Ao fim, dez fontes read-ok, incluindo as quatro propriedades recuperadas;
+GNOME=false, um monitor principal com janela atribuída. post_watch_status=degraded
+por logind-lock indisponível. Confirma recuperação das leituras nesse instante,
+sem medir latência da recuperação ou precisão de foco. Não apagar as indisponibilidades
+intermediárias nem repetir ensaio apenas para obter status available.
+
+Medição inicial de uma amostra: janela 0,131035s, CPU de 47,408% de um núcleo e
+RSS próprio/maior filho de 19.204 KiB cada. Exclui os 180s do watcher e tempo suspenso;
+não comprova RNF de CPU/memória contínua.
+
+Aceite: suspensão/retomada manual correlacionadas ao par logind, revalidação
+acionada e leituras recuperadas ao fim. Lock GNOME aguarda esclarecimento do relato;
+comparação LockedHint permanece indisponível. Depois do aceite do fallback, seguir
+precisão de foco/monitores, perfis e login/logout/instância única; C0 não atingido.
+
+Alteração somente documental em relatório, handoff e checklist; código preservado.
+git diff --check executado; checks Python/build não repetidos, CI remota pendente.
+Sem commit/push; EP-02 permanece In Progress e EP-03 não iniciado.
+
+## Esclarecimento e aceite da etapa 1 — 07/10/2026
+
+O usuário corrigiu o atalho informado: Windows+L para bloquear. A correção,
+junto da resposta afirmativa anterior de uma ação e espera de aproximadamente
+15s antes de retornar, permite correlacionar o único ciclo GNOME do ensaio
+isolado de 120s ao bloqueio/desbloqueio manual. Estados true/false amostrados e
+leitura final false sustentam o aceite do fallback nesse host, sem medir duração.
+
+Etapa 1 aceita no escopo do spike: bloqueio/desbloqueio GNOME e suspensão/retomada
+manual com par PrepareForSleep, revalidação acionada e recuperação das leituras
+ao fim. A ausência imediata de foco/propriedades da janela na retomada permanece
+registrada; não reutilizar app nem tratá-la como prova de falha X11 ou de duração.
+LockedHint continua indisponível por Session.Display vazio, sem comparação entre
+fontes ou mudança de critério. Essa limitação deve entrar na decisão final C0.
+
+Próximas etapas: precisão de foco/monitores, correlação de duas janelas/perfis por
+extensão mínima e prova de login/logout/instância única. RNF de CPU (1,137% no
+polling histórico) e soak de 8h continuam pendentes. Não encerrar EP-02 ou iniciar
+EP-03 antes de C0. Atualizados ADR-010, handoff, checklist e relatório; somente
+documentação nesta confirmação, sem repetir checks Python/build ou fazer commit/push.
+
+## Consultas complementares no host — 07/10/2026, 20:19–20:23 local
+
+Evidência fornecida pelo usuário, executada diretamente no terminal do host;
+não é nova medição via Docker. Registrar somente relações e resultados, sem
+IDs/UID, usuário, seat/TTY, DISPLAY, nomes de saídas ou configuração pessoal.
+
+- Ambiente do terminal confirma DISPLAY local preenchido e tipo x11.
+- Listagem manual mostrou uma sessão; User.Display indicou essa mesma sessão.
+  A seleção por listagem não será incorporada ao coletor; manter GetUser/User.Display.
+- show-session self falhou no host: chamador não pertence a sessão conhecida.
+  Logo, essa falha específica também ocorre fora do contêiner. Não concluir que
+  a sessão gráfica inexiste; ela foi consultada explicitamente depois.
+- Consulta explícita da sessão indicada retornou LockedHint=no. A propriedade
+  foi acessível no host naquele instante; o doctor permanece impedido de consultá-la
+  pelo critério de associação Session.Display, não por erro de acesso já observado.
+  Essa única leitura não valida atualização durante bloqueio/desbloqueio, leitura
+  no contêiner nem identidade dessa sessão em relação ao servidor X11.
+- xrandr --listmonitors informou dois monitores definidos, um principal, com
+  resoluções distintas. Doctor usa --listactivemonitors; consultas ocorreram em
+  instantes diferentes e filtram conjuntos distintos. Não atribuir a discrepância
+  a Docker sem comparação do mesmo comando/servidor/configuração no mesmo período.
+- wlr-randr não foi encontrado. O alvo validado é X11; essa ausência não invalida
+  as leituras XRandR já realizadas e não exige adicionar ferramenta ao projeto.
+
+Uma hipótese para self indisponível é processo iniciado pelo systemd user manager,
+fora de uma session scope. O [manual sd_pid_get_session do Debian 12](https://manpages.debian.org/bookworm/libsystemd-dev/sd_pid_get_session.3.en.html)
+documenta esse cenário para processos de usuário, inclusive GUI por ativação D-Bus.
+É hipótese, não origem do terminal comprovada. Associação por PID pode falhar pelo
+mesmo motivo; não tratá-la como alternativa garantida nem recuperar ambiente de processos.
+O [manual XRandR](https://manpages.debian.org/bookworm/x11-xserver-utils/xrandr.1.en.html)
+distingue monitores definidos de ativos.
+
+Esses comandos não consultaram Session.Display explicitamente; a evidência de valor
+vazio continua sendo a resposta tipada do doctor. Conhecer DISPLAY no terminal ou
+ver apenas uma sessão não substitui a comprovação exigida no ADR-010. Possibilidade
+de obter LockedHint confirmada no host; associação e correlação durante lock ainda
+pendentes para essa fonte. Fallback GNOME e aceite anterior preservados.
+
+Atualizados relatório, handoff e checklist, sem código ou mudança de critérios.
+git diff --check executado; testes/build não repetidos. Sem commit/push ou nova CI.

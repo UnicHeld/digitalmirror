@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -32,6 +33,8 @@ class SessionResolution:
     path: str | None = field(default=None, repr=False)
     reason: str | None = None
     from_user_display: bool = False
+    # Somente booleans/enums definidos aqui; nunca propriedades brutas do logind.
+    diagnostics: dict[str, bool | str] = field(default_factory=dict)
 
 
 def json_value(output: str, signature: str) -> object:
@@ -50,20 +53,29 @@ def local_display(value: str) -> int | None:
 
 
 def resolve_session(env: Mapping[str, str], runner: Runner) -> SessionResolution:
+    diagnostics: dict[str, bool | str] = {"candidate_source": "not-attempted"}
+
+    def failure(reason: str) -> SessionResolution:
+        return SessionResolution(reason=reason, diagnostics=diagnostics)
+
     display = local_display(env.get("DISPLAY", ""))
     if env.get("XDG_SESSION_TYPE") != "x11" or display is None:
-        return SessionResolution(reason="x11-session-not-confirmed")
+        return failure("x11-session-not-confirmed")
     explicit = env.get("XDG_SESSION_ID", "")
     host_uid = env.get("DIGITALMIRROR_HOST_UID", "")
     if not re.fullmatch(r"[0-9]{1,10}", host_uid) or not 0 < int(host_uid) < 2**32:
-        return SessionResolution(
-            reason="missing-host-uid" if explicit else "missing-graphical-session-id"
-        )
+        return failure("missing-host-uid" if explicit else "missing-graphical-session-id")
     uid = int(host_uid)
+    process_uid = os.getuid()
+    diagnostics.update(
+        process_uid_is_root=process_uid == 0,
+        host_uid_matches_process_uid=uid == process_uid,
+    )
     from_user_display = not bool(explicit)
     if explicit and not SESSION_ID.fullmatch(explicit):
-        return SessionResolution(reason="invalid-session-id")
+        return failure("invalid-session-id")
     method = "GetSession" if explicit else "GetUser"
+    diagnostics["candidate_source"] = "explicit-session-id" if explicit else "user-display"
     result = runner(
         BUSCTL
         + [
@@ -77,7 +89,7 @@ def resolve_session(env: Mapping[str, str], runner: Runner) -> SessionResolution
         ]
     )
     if result.reason:
-        return SessionResolution(reason=result.reason)
+        return failure(result.reason)
     try:
         data = json_value(result.output, "o")
         if not isinstance(data, list) or len(data) != 1 or not isinstance(data[0], str):
@@ -88,7 +100,7 @@ def resolve_session(env: Mapping[str, str], runner: Runner) -> SessionResolution
                 raise ValueError("invalid-response")
             result = runner(BUSCTL + ["get-property", SERVICE, path, USER_INTERFACE, "Display"])
             if result.reason:
-                return SessionResolution(reason=result.reason)
+                return failure(result.reason)
             candidate = json_value(result.output, "(so)")
             if (
                 not isinstance(candidate, list)
@@ -98,7 +110,7 @@ def resolve_session(env: Mapping[str, str], runner: Runner) -> SessionResolution
                 raise ValueError("invalid-response")
             explicit, path = candidate
             if not explicit:
-                return SessionResolution(reason="no-primary-graphical-session")
+                return failure("no-primary-graphical-session")
         if (
             not SESSION_ID.fullmatch(explicit)
             or not SESSION_PATH.fullmatch(path)
@@ -121,7 +133,7 @@ def resolve_session(env: Mapping[str, str], runner: Runner) -> SessionResolution
             ]
         )
         if result.reason:
-            return SessionResolution(reason=result.reason)
+            return failure(result.reason)
         lines = result.output.splitlines()
         if len(lines) != 6:
             raise ValueError("invalid-response")
@@ -143,15 +155,27 @@ def resolve_session(env: Mapping[str, str], runner: Runner) -> SessionResolution
             or not isinstance(session_display, str)
         ):
             raise ValueError("invalid-response")
-        if (
-            session_id != explicit
-            or user[0] != uid
-            or session_type != "x11"
-            or session_class != "user"
-            or remote is not False
-            or local_display(session_display) != display
-        ):
-            return SessionResolution(reason="session-identity-mismatch")
+        observed_display = local_display(session_display)
+        identity_checks = {
+            "identity_id_matches": session_id == explicit,
+            "identity_uid_matches": user[0] == uid,
+            "identity_type_x11": session_type == "x11",
+            "identity_class_user": session_class == "user",
+            "identity_remote_false": remote is False,
+            "identity_display_matches": observed_display == display,
+        }
+        diagnostics.update(identity_checks)
+        diagnostics["session_display_status"] = (
+            "empty"
+            if not session_display
+            else "local"
+            if observed_display is not None
+            else "nonlocal-or-invalid"
+        )
+        if not all(identity_checks.values()):
+            return failure("session-identity-mismatch")
     except (ValueError, TypeError):
-        return SessionResolution(reason="invalid-response")
-    return SessionResolution(path=path, from_user_display=from_user_display)
+        return failure("invalid-response")
+    return SessionResolution(
+        path=path, from_user_display=from_user_display, diagnostics=diagnostics
+    )

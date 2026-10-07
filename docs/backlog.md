@@ -72,6 +72,22 @@ Primeiro doctor real da versão nova: dez fontes read-ok, logind-lock indisponí
 por session-identity-mismatch. Atributo divergente desconhecido; investigar com
 diagnóstico sanitizado antes dos watchers novos. Não encerra US-02.2/03/04 nem C0.
 
+Atualização de 07/10/2026: instrumentação sanitizada confirmou candidato por
+User.Display, com Id/UID/Type/Class/Remote válidos e Session.Display vazio como
+única comparação rejeitada. Mantidos os critérios do ADR-010, sem enumeração ou
+consulta LockedHint de candidato não validado. Checks via Compose/Python 3.11:
+formatter, lint, mypy, 57 testes e build aprovados.
+
+Etapa 1 aceita no escopo finito do spike: um bloqueio/desbloqueio manual Windows+L
+correlacionado ao ciclo GNOME e estados true/false; suspensão/retomada manual
+correlacionada a um par PrepareForSleep, com revalidação e recuperação final das
+fontes. Foco vazio na consulta imediata de retomada permanece registrado.
+LockedHint acessível em consulta direta no host não comprova associação ao X11
+nem transições; o doctor continua rejeitando Session.Display vazio. Comparação
+de fontes e decisão final de adaptadores seguem pendentes em US-02.2.
+Precisão de foco/monitores, dois perfis, login/logout/instância única e custo de
+polling ainda precisam de validação. EP-02 In Progress, EP-03 Backlog e C0 pendente.
+
 **Aceite:** relatório de fontes disponíveis e ausentes, precisão observada e custo básico. Diagnóstico é só leitura, sem mover foco ou gerar entradas. As fontes indisponíveis têm fallback definido ou estado desconhecido. Evidência do alvo real registrada sem conteúdo pessoal.
 
 ### EP-03 · [#3](https://github.com/UnicHeld/digitalmirror/issues/3) — Coleta passiva de sessão e aplicação

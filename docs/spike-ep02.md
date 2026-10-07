@@ -53,6 +53,69 @@ serviço usa privileged, Docker socket, home completo ou xhost +.
 O JSON mostra fontes, motivos/fallbacks e pendências sem título, app, PID, hostname
 ou nome de monitor. Mesmo código 0 não encerra os ensaios abaixo.
 
+## Investigar session-identity-mismatch
+
+Após reconstruir as imagens, repetir o doctor simples no terminal GNOME/X11 com
+o ambiente original. Analisar o objeto `checks` cuja `source` é `logind-lock`.
+Compartilhar esse objeto sanitizado, sem saída bruta de busctl, `env`, cookies
+ou configuração resolvida do Compose.
+
+`candidate_source` identifica `explicit-session-id` (GetSession), `user-display`
+(GetUser → User.Display) ou `not-attempted` (pré-condição rejeitada). Preserva a
+proveniência mesmo em falha; `resolved_from_user_display=false` sozinho continua
+sem informar o caminho tentado. Os seis booleans abaixo só aparecem após parse
+completo das propriedades, e cada `false` identifica uma divergência:
+
+| Campo | Comparação exigida |
+| --- | --- |
+| `identity_id_matches` | Id igual ao candidato fornecido/indicado |
+| `identity_uid_matches` | User/UID igual ao UID real fornecido pelo launcher |
+| `identity_type_x11` | Type igual a x11 |
+| `identity_class_user` | Class igual a user |
+| `identity_remote_false` | Remote igual a false |
+| `identity_display_matches` | Display local igual ao servidor observado, ignorando screen |
+
+`session_display_status=empty` identifica propriedade vazia;
+`nonlocal-or-invalid`, formato que não atende ao DISPLAY local; `local`, formato
+local válido, que ainda pode apontar para servidor diferente. Ausência dos campos
+de comparação significa que não chegaram a ser calculados; não implica aprovação.
+
+No rootless detectado pelo launcher, `process_uid_is_root=true` e
+`host_uid_matches_process_uid=false` são esperados: UID 0 interno não substitui
+o UID real na associação. `identity_uid_matches` deve continuar true. Esses
+booleans não identificam por si o modo do daemon. Registrar apenas suas relações,
+sem números. Não tratar DISPLAY vazio ou outra divergência como justificativa
+automática para afrouxar o ADR-010; qualquer novo critério exige evidência e ADR/spec.
+
+Só depois da associação válida, ou decisão explícita e fundamentada de fallback
+GNOME, prosseguir aos ensaios separados de lock (120s) e suspensão/retomada (180s).
+
+Decisão registrada no ADR-010 em 07/10/2026: o candidato real passou em cinco
+comparações, mas Session.Display veio vazio. Preservar logind-lock indisponível;
+ensaiar o fallback GNOME existente conforme sequência abaixo. Não chamar SetDisplay
+ou alterar o login. Comparação com LockedHint permanece não validada.
+
+1. Executar `sh scripts/compose-desktop run --rm desktop digitalmirror doctor --watch-seconds 120`.
+   Aguardar cerca de 5s para conectar, manter desbloqueado por ≥15s, bloquear
+   manualmente uma vez (Windows+L), manter bloqueado por ≥15s, desbloquear e
+   aguardar a saída. Relatar que houve uma ação de bloqueio e uma de desbloqueio
+   efetivos, se foram exatamente essas as ações realizadas.
+2. Conferir um ciclo GNOME completo, sem duplicatas/fins sem início/início pendente,
+   contagens true e false em source_state_counts.gnome-lock, conexão sem falha e
+   post_watch_checks coerente com a tela desbloqueada. Contagens não fornecem
+   duração; tempos e ações vêm do relato manual.
+3. Depois do ensaio de lock, executar separadamente
+   `sh scripts/compose-desktop run --rm desktop digitalmirror doctor --watch-seconds 180`.
+   Aguardar conexão, suspender e retomar manualmente pelo GNOME. Relatar as ações
+   e o bloqueio automático, caso ocorra; conferir par PrepareForSleep,
+   resume_revalidation e post_watch_checks de todas as fontes.
+
+Nesses ensaios, logind-lock indisponível, comparison_counts.unavailable e
+status degraded/código 1 são esperados. Não interpretar isso como falha automática
+do ensaio GNOME nem como concordância GetActive/LockedHint. Falhas de outras fontes
+e divergência entre GNOME/ação manual continuam impeditivas. Sem validação real
+do fallback, não liberar C0 ou a classificação do futuro coletor.
+
 ## Polling, monitores e precisão
 
 ```bash

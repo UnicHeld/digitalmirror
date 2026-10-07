@@ -35,6 +35,25 @@ validando Id/UID/Type/Class/Remote/Display antes de LockedHint. Sem associação
 manter indisponível; ID explícito incorreto não gera busca de outro candidato.
 Não enumerar sessões nem recuperar ambiente de outro processo.
 
+Given rejeição do candidato, Then preservar `session-identity-mismatch` e emitir
+em `logind-lock.details` a proveniência da tentativa (`candidate_source`) mesmo
+na falha. Após parse tipado completo, emitir seis comparações `identity_*` como
+booleans e `session_display_status` como enum local/empty/nonlocal-or-invalid.
+Falha anterior ao parse completo não emite resultados parciais de identidade.
+`process_uid_is_root` e `host_uid_matches_process_uid` distinguem as identidades
+interna/host sem imprimir seus valores nem alterar a escolha do candidato.
+`resolved_from_user_display` mantém a semântica anterior de sucesso. Sem ID/UID,
+DISPLAY, paths ou propriedades brutas na saída; divergências múltiplas são
+reportadas juntas. Requisitos RF-04/16 e RNF-09, extensão do ADR-010.
+
+Given candidato User.Display com Id/UID/Type/Class/Remote confirmados e
+Session.Display vazio, Then logind-lock continua indisponível. Prosseguir apenas
+com ensaios independentes GNOME e PrepareForSleep conforme decisão ADR-010 de
+07/10/2026; não inferir associação nem alterar a sessão. O aceite do fallback
+GNOME exige ação manual correlacionada a ciclo ordenado e consultas true/false,
+mais revalidação na retomada/fim. Comparação unavailable e diagnóstico degraded
+são esperados nessa condição; LockedHint e concordância permanecem não validados.
+
 CLI retorna JSON versionado com fontes, motivos, fallback e medições agregadas.
 `--watch-seconds` (0–900; padrão 0) observa ActiveChanged e PrepareForSleep em
 streams limitados, mostrando somente contagens de true/false e status de conexão.

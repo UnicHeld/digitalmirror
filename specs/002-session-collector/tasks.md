@@ -11,11 +11,22 @@
 - [x] US-02.3: registrar polling real informado pelo usuário (12 amostras/5s), com disponibilidade estável e CPU de 1,137% acima da referência RNF-03.
 - [x] US-02.2: registrar entrega real de dois ciclos GNOME no watcher de 120s durante ensaio manual Windows+L, sem inferir quantidade de bloqueios efetivos.
 - [x] US-02.2: suspensão/retomada voluntárias no GNOME com um par PrepareForSleep ordenado e saída final após retorno, informados pelo usuário.
-- [ ] US-02.2: correlacionar ações/ciclos de bloqueio, comparar GetActive/LockedHint da sessão e revalidar fontes após retomada.
+- [x] US-02.2: correlacionar bloqueio manual ao ciclo GNOME e revalidar fontes após retomada, pelo fallback documentado no ADR-010.
+- [ ] US-02.2 / C0: registrar na decisão final de adaptadores que a comparação GetActive/LockedHint continua indisponível por Session.Display vazio.
 - [x] US-02.2/03: implementar resolução validada da sessão e UID real no Compose (ADR-010).
 - [x] US-02.2: implementar contagens de lock durante watcher e revalidação após par de retomada/fim.
 - [x] US-02.2 / RNF-09: testar validação de identidade, falhas, divergências e recuperação sanitizadas via Compose.
-- [ ] US-02.2: investigar session-identity-mismatch do primeiro doctor real ADR-010, com motivos/proveniência sanitizados antes de corrigir associação.
+- [x] US-02.2: identificar a comparação que causou session-identity-mismatch no doctor real; somente Session.Display vazio divergiu, sem corrigir/afrouxar associação.
+- [x] US-02.2 / RF-04/16 / RNF-09: instrumentar proveniência persistente em falhas, seis comparações de identidade, categoria de DISPLAY e relação entre UIDs; preservar validação ADR-010 e privacidade.
+- [x] US-02.2 / RNF-09: regressões de rejeições individuais/múltiplas, categorias de DISPLAY, erros antes das comparações e UID rootless; 57 testes/checks/build via Compose/Python 3.11 e imagens dev/desktop reconstruídas.
+- [x] US-02.2: receber doctor simples reconstruído no terminal GNOME/X11 e identificar os atributos divergentes antes dos watchers novos.
+- [x] US-02.2: registrar decisão de continuar ensaios pelo fallback GNOME existente, mantendo associação logind indisponível (ADR-010, evidência de 07/10).
+- [x] US-02.2: registrar watcher real de 120s da versão instrumentada: um ciclo GNOME completo, 24 consultas read-ok (7 true/17 false) e dez fontes disponíveis ao fim; correlação com ações manuais ainda pendente.
+- [x] US-02.2: suspensão manual/retomada informadas no watcher de 180s com um ciclo PrepareForSleep, revalidação acionada e propriedades da janela recuperadas ao fim após no-focused-window imediato.
+- [x] US-02.2: esclarecer atalho informado; usuário corrigiu para Windows+L e confirmou bloqueio manual correlacionado ao único ciclo GNOME.
+- [x] US-02.2: validar fallback GNOME com um bloqueio manual correlacionado a um ciclo e consultas true/false; suspensão/retomada com revalidações e recuperação final, sem alegar comparação LockedHint.
+- [x] US-02.2: registrar evidência complementar do host: LockedHint acessível por candidato indicado por User.Display e self sem associação; não substituir o critério DISPLAY nem fixar ID.
+- [ ] US-02.2: investigar associação passiva alternativa ao X11 antes de usar LockedHint com Session.Display vazio; documentar ADR/spec e validar transições se uma alternativa for comprovada.
 - [ ] US-02.3: polling com fontes gráficas saudáveis e precisão de transição medida.
 - [ ] US-02.3: confirmar ambiente gráfico e início único após login/logout reais.
 - [ ] US-02.4: prova real com duas janelas/perfis e metadados da extensão.
@@ -53,3 +64,41 @@ real, sem emitir identidade. Primeiro doctor real da etapa 1 recebido: dez fonte
 read-ok, GNOME=false e logind-lock=session-identity-mismatch; atributo divergente
 ainda desconhecido. Comparação de lock/retomada da versão nova ainda não testada.
 Retomar da investigação descrita no handoff, sem iniciar EP-03.
+
+Retomada de 07/10/2026: instrumentação sanitizada pronta e validada em Compose,
+com 57 testes, formatter, lint, mypy e build aprovados. Doctor dev e imagem runtime
+reconstruída, sem sockets gráficos, reportam degraded/código 1 esperado e
+candidate_source=not-attempted. Ainda falta o objeto logind-lock do doctor no
+terminal GNOME/X11 para identificar a divergência real; não foi corrigido nenhum
+critério de associação nem executado watcher gráfico nesta retomada.
+
+Doctor real das 22:32:01 UTC de 07/10 recebido: candidato user-display,
+Id/UID/Type/Class/Remote confirmados; somente Session.Display vazio falhou.
+GNOME=false, dez fontes read-ok, um monitor principal com janela atribuída.
+Decisão documentada de ensaiar fallback GNOME, conservando logind-lock
+indisponível. Watchers dessa versão ainda pendentes; C0 não atingido.
+
+Watcher real de lock recebido (amostra inicial 23:01:16 UTC de 07/10): um ciclo
+GNOME ordenado, sem duplicatas ou bordas pendentes; 24 consultas read-ok, true=7
+e false=17. Dez fontes disponíveis ao fim, GNOME=false. logind-lock indisponível
+24/24 e ao fim por Session.Display vazio, comparação unavailable=24. Falta relato
+manual para correlacionar ações e aceitar fallback. Sem eventos de suspensão;
+próximo ensaio separado de 180s deve validar revalidações após par de retomada.
+C0 permanece pendente; não avançar ao EP-03.
+
+Watcher real de suspensão recebido (amostra inicial 23:05:42 UTC de 07/10):
+usuário relata suspensão manual por cerca de 15s e retomada. Um ciclo logind e um
+GNOME completos, zero duplicatas/bordas pendentes; GetActive read-ok 35/35
+(true=2/false=33). Um par de retomada acionou revalidação: X11 respondeu sem foco,
+quatro propriedades da janela indisponíveis por no-focused-window; recuperaram
+ao fim, com dez fontes read-ok. logind-lock continua indisponível por Display
+vazio. Não interpretar foco vazio como falha de conexão ou fabricar último app.
+Relato do primeiro lock recebido, mas atalho informado ficou ambíguo; esclarecer
+bloqueio efetivo antes do aceite do fallback e avanço às próximas etapas.
+
+Esclarecimento recebido: o atalho foi Windows+L para bloquear. Relato manual
+corresponde ao único ciclo GNOME do ensaio isolado; fallback aceito no host.
+Etapa 1 encerrada com bloqueio/desbloqueio e suspensão/retomada revalidados,
+preservando leitura sem foco imediata/recuperação final e limitação LockedHint.
+Seguir precisão de foco/monitores, dois perfis e login/logout/instância única.
+C0 e decisão final de adaptadores pendentes; EP-03 permanece não iniciado.
