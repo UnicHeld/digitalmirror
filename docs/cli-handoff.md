@@ -28,18 +28,20 @@ D-Bus de sessão ou identificação da sessão gráfica. Lock/unlock, sleep/resu
 monitores, precisão de foco, dois perfis e autostart real continuam pendentes.
 Não iniciar EP-03 nem declarar C0 atingido antes desses ensaios.
 
-Continuação local do EP-02: ADR-008 e resumo ordenado de ciclos do watcher,
-duplicatas/sinais sem par e falha de conexão explícita. Checks Compose/Python 3.11
-com 38 testes e build passaram; imagens dev/runtime reconstruídas. Logind sem
-eventos durante 2s confirma somente conexão, com cycle_status=no-events.
-Incremento ainda não publicado/validado na CI. Próximo passo: executar o launcher
-no terminal GNOME/X11 e comparar ciclos com ações manuais conforme o protocolo.
+Continuação publicada do EP-02 no commit `dfe2a24`: ADR-008 e resumo ordenado
+de ciclos do watcher, duplicatas/sinais sem par e falha de conexão explícita.
+ADR-009 corrige XDG_SESSION_ID ausente: ID opcional, mantendo cookie/sockets e
+LockedHint indisponível sem buscar outra sessão. Override aceita ID vazio.
+[CI via Compose](https://github.com/UnicHeld/digitalmirror/actions/runs/37553831948)
+passou em Python 3.11/3.13: imagens dev/runtime, formatter, lint, mypy, 40 testes
+e build sdist/wheel. Issue #2 e README do Project sincronizados; US-02.1 concluída
+como diagnóstico/relatório, sem encerrar os ensaios reais das demais histórias.
 
-Correção local após feedback do terminal: XDG_SESSION_ID opcional conforme
-ADR-009. O launcher preserva cookie/sockets e o doctor informa LockedHint
-indisponível quando falta o ID, sem buscar outra sessão. 40 testes/checks/build
-passaram em Compose/Python 3.11; override aceita ID vazio. Novo ensaio do usuário,
-publicação e CI remota deste incremento ainda pendentes.
+Logind sem eventos durante 2s confirma somente conexão, com cycle_status=no-events.
+Novo resultado do terminal após a correção ainda pendente. Próximo passo: repetir
+`sh scripts/compose-desktop run --rm desktop` no terminal GNOME/X11 e comparar
+ciclos com ações manuais conforme o protocolo. Degraded/retorno 1 é esperado quando
+falta o ID e LockedHint fica indisponível; não escolher um ID arbitrário.
 
 ## Primeiro trabalho
 

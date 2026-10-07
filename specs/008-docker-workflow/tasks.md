@@ -14,3 +14,7 @@
 validou imagens dev/runtime, 32 testes e build sdist/wheel em Python 3.11/3.13.
 Sessão GNOME/X11 completa e futura API em rootless Engine 29.5+ permanecem sem
 validação nesta entrega. Os checks não encerram EP-02/C0.
+
+Continuação publicada no commit `dfe2a24`: ID de sessão opcional e ciclos ordenados.
+[CI via Compose](https://github.com/UnicHeld/digitalmirror/actions/runs/37553831948)
+passou em Python 3.11/3.13 com 40 testes, build das imagens dev/runtime e sdist/wheel.

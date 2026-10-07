@@ -44,17 +44,20 @@ Checklist concluído, issue #1 encerrada e status Done no Project.
 
 **Histórias/tarefas:**
 
-- [ ] US-02.1 — Comando `doctor` verifica X11, propriedades de foco, idle, D-Bus e monitores.
+- [x] US-02.1 — Comando `doctor` verifica X11, propriedades de foco, idle, D-Bus e monitores.
 - [ ] US-02.2 — Spike valida bloqueio, desbloqueio, suspensão e retomada reais.
 - [ ] US-02.3 — Spike mede custo de polling e integração de autostart com GNOME.
 - [ ] US-02.4 — Prova de correlação navegador/X11 com duas janelas e perfis.
 
 Status In Progress no Project: comando doctor, medidor finito e watcher de sinais publicados,
 com testes sintéticos e diagnóstico real de logind. Ensaios gráficos e aceite final
-pendentes; veja `docs/spike-ep02-report.md`. As histórias permanecem abertas.
-Continuação local conforme ADR-008: watcher resume ciclos ordenados, duplicatas
-e sinais sem par. Checks Compose/Python 3.11 com 38 testes e build passaram;
-incremento ainda não publicado. Nenhum ciclo real foi observado nesta execução.
+pendentes; veja `docs/spike-ep02-report.md`. US-02.1 concluída como diagnóstico e
+relatório de fontes; US-02.2/03/04 permanecem pendentes.
+Continuação publicada no commit `dfe2a24`: ADR-008 resume ciclos ordenados,
+duplicatas e sinais sem par; ADR-009 torna XDG_SESSION_ID opcional, com LockedHint
+indisponível e sem buscar outra sessão. [CI via Compose](https://github.com/UnicHeld/digitalmirror/actions/runs/37553831948)
+passou em Python 3.11/3.13 com 40 testes, imagens dev/runtime e build. Issue #2
+e Project sincronizados. Nenhum ciclo real foi observado nesta execução.
 
 **Aceite:** relatório de fontes disponíveis e ausentes, precisão observada e custo básico. Diagnóstico é só leitura, sem mover foco ou gerar entradas. As fontes indisponíveis têm fallback definido ou estado desconhecido. Evidência do alvo real registrada sem conteúdo pessoal.
 

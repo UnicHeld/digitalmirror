@@ -173,9 +173,9 @@ not-tested. Diagnóstico degradado/retorno 1 esperado pela ausência da sessão 
 Nenhum comando provocou lock, suspensão ou mudança de foco.
 
 O launcher de sessão real voltou a recusar execução sem GNOME/X11 com código 2.
-Ensaios reais e C0 continuam pendentes. Esta continuação ainda não foi publicada
-nem validada pela CI remota ou por imagem Python 3.13; a evidência anterior de CI
-cobre a entrega de 32 testes publicada, não este incremento de 38 testes.
+Ensaios reais e C0 continuam pendentes. Na validação local dessa fatia, publicação
+e CI Python 3.13 ainda não haviam ocorrido. A evidência anterior de CI cobre a
+entrega de 32 testes; publicação e CI do incremento estão na seção seguinte.
 
 ## Correção do launcher — XDG_SESSION_ID ausente (ADR-009)
 
@@ -198,4 +198,14 @@ Imagens dev/runtime reconstruídas com sucesso para este incremento.
 
 Aguardando resultado do novo diagnóstico no terminal do usuário. O erro anterior
 não valida foco, bloqueio, suspensão, monitores, perfis ou autostart. C0 continua
-pendente. Novos ciclos/ID opcional ainda aguardam publicação e CI remota.
+pendente.
+
+Publicação concluída no commit `dfe2a24`.
+[CI via Compose](https://github.com/UnicHeld/digitalmirror/actions/runs/37553831948)
+passou em Python 3.11 e 3.13: configuração Compose, build das imagens dev/runtime,
+formatter, lint, mypy, 40 testes e build sdist/wheel com artefatos publicados.
+Logs confirmaram 40 testes em cada job. A leitura dos logs inicialmente foi
+bloqueada pelo cache gh fora do sandbox; repetida após autorização e concluída.
+Issue #2 e README do Project atualizados com os ADRs 008/009, CI e pendências.
+US-02.1 concluída como comando/relatório; EP-02 continua In Progress, C0 pendente
+e EP-03 no Backlog. CI sem sessão gráfica não valida as histórias de transição.

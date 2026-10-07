@@ -22,3 +22,6 @@ zero ciclos e cycle_status=no-events; não confirma suspensão real.
 Regressões do ID opcional passaram: preflight ainda exige Xauthority/sockets,
 modelo Compose aceita ID vazio e doctor preserva fontes independentes sem consultar
 outra sessão. 40 testes/checks/build passaram via Compose/Python 3.11.
+Incremento publicado no commit `dfe2a24`; [CI via Compose](https://github.com/UnicHeld/digitalmirror/actions/runs/37553831948)
+passou em Python 3.11/3.13, com 40 testes e imagens dev/runtime. Issue #2/Project
+sincronizados: US-02.1 concluída, EP-02 In Progress e ensaios reais ainda pendentes.
