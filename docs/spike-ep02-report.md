@@ -259,3 +259,55 @@ Validação desta atualização documental: `git diff --check` e
 `sh scripts/compose run --rm dev` passaram (formatter, lint, mypy, 40 testes e
 build sdist/wheel em Python 3.11). Não houve alteração de código ou novo ensaio
 gráfico executado pelo agente.
+
+## Polling e watcher GNOME enviados pelo usuário — 06/10/2026 local
+
+Dois resultados fornecidos pelo usuário, executados via launcher desktop Compose.
+As datas observed_at do polling são 07/10/2026 às 01:17:33 UTC (22:17:33 local)
+e 01:19:29 UTC (22:19:29 local) para a amostra anterior ao watcher. O horário da
+amostra não representa o encerramento do watcher. Nenhum JSON bruto foi versionado.
+
+### Polling de 12 amostras a cada 5s
+
+As dez fontes anteriormente disponíveis responderam read-ok nas **12 de 12
+amostras**, sem falhas registradas. LockedHint permaneceu indisponível nas 12
+amostras por missing-graphical-session-id; degraded continua esperado.
+
+| Medida | Resultado informado | Avaliação |
+| --- | --- | --- |
+| Janela do polling | 55,202680s | Ensaio curto; não equivale a 8h |
+| Latência p95 por ciclo | 205,275ms | Consulta termina bem antes do próximo intervalo nominal de 5s |
+| Atraso p95 de início | 0,290ms | Abaixo de 1s nesta janela; não mede erro de foco |
+| CPU própria / filhos | 0,113805s / 0,513613s | Aproximadamente 82% do tempo de CPU medido veio dos subprocessos |
+| CPU média de um núcleo | 1,137% | Acima da meta RNF-03 de ≤1% em 0,137 ponto percentual |
+| RSS máximo próprio | 19.112 KiB (18,66 MiB) | Abaixo de 100 MiB nesta janela; não valida estabilidade de 8h |
+| Maior RSS máximo de filho | 19.112 KiB | Não somar como memória simultânea de todos os processos |
+
+Avaliação: disponibilidade estável e agendamento com baixo atraso neste ensaio.
+CPU ainda não atende à referência RNF-03 nessa janela, e não deve ser arredondada
+para declarar aceite. O custo medido é do doctor com consultas auxiliares e
+subprocessos, sem banco, bridge, API ou dashboard; também não inclui daemon Docker,
+startup ou watcher. Conforme ADR-006 e contrato RNF, avaliar adaptadores com
+conexões nativas antes da entrega, preservando o intervalo de 5s e sem pressupor
+que remover subprocessos será suficiente. C0/RNF completas continuam pendentes.
+
+### Watcher de 120s e ação manual Windows+L
+
+O usuário relatou bloqueio manual com Windows+L. Em 120,003239s monotônicos, o
+watcher GNOME recebeu true=2, false=2, **dois ciclos ordenados completos**, zero
+duplicatas, zero fins sem início e nenhum início pendente; status observed e
+cycle_status=complete. Isso confirma entrega real de ActiveChanged nessa sessão
+durante o ensaio manual. A contagem de ações manuais ainda precisa ser correlacionada
+com os dois ciclos: não assumir dois bloqueios efetivos nem duração ou latência de
+bloqueio a partir do resumo. LockedHint/GetActive durante a tela bloqueada e
+continuidade do serviço não foram comparados. US-02.2 permanece parcial.
+
+PrepareForSleep: zero sinais/ciclos e cycle_status=no-events. Não houve relato
+de suspensão nesse ensaio; resultado compatível com teste somente de bloqueio,
+sem evidência de suspensão/retomada. Próximo ensaio: watcher separado com
+suspensão e retomada voluntárias pelo GNOME; verificar um par true → false e
+continuidade após retorno. Dois perfis, precisão de foco, autostart e C0 pendentes.
+
+Os 30,689% de CPU da segunda saída se referem somente à amostra inicial de
+197,212ms; **não** medem o custo do watcher de 120s. pending_validation é uma lista
+estática de limites do spike, sem atualização automática pelo resumo de ciclos.

@@ -26,8 +26,9 @@ Leia [procedimento](spike-ep02.md) e [relatório inicial](spike-ep02-report.md).
 Este ambiente Debian 12/Python 3.11 acessa logind, mas não recebeu DISPLAY,
 D-Bus de sessão ou identificação da sessão gráfica. O terminal do usuário já
 confirmou leitura de X11/GNOME e dois monitores via Compose (evidência abaixo).
-Lock/unlock, sleep/resume, precisão de foco/monitor, dois perfis e autostart real
-continuam pendentes.
+Watcher GNOME com ciclos durante bloqueio manual já foi observado; correlação
+com a quantidade de ações, LockedHint, sleep/resume, precisão de foco/monitor,
+dois perfis e autostart real continuam pendentes.
 Não iniciar EP-03 nem declarar C0 atingido antes desses ensaios.
 
 Continuação publicada do EP-02 no commit `dfe2a24`: ADR-008 e resumo ordenado
@@ -46,8 +47,16 @@ atribuída. Somente LockedHint indisponível por missing-graphical-session-id.
 Uma amostra com janela de aproximadamente 181ms não mede CPU média de polling;
 os 21,95% reportados não comprovam consumo contínuo. Evidência informada pelo
 usuário às 00:56:06 UTC de 07/10 (06/10 local), detalhada no relatório.
-Próximo passo: polling de 12 amostras e watchers isolados para comparar ciclos
-com ações manuais conforme o protocolo. Degraded/retorno 1 é esperado quando
+Polling posterior de 12 amostras/5s informado pelo usuário: dez fontes read-ok
+12/12, janela de 55,203s, latência p95 de 205,275ms, atraso p95 de 0,290ms e RSS
+próprio de 18,66 MiB. CPU média de um núcleo de 1,137% excede a referência RNF-03
+de ≤1%; não declarar meta de CPU atendida nem RNF de 8h validadas.
+Watcher de 120s após ação manual Windows+L: GNOME com dois pares true → false,
+zero duplicatas/bordas pendentes e cycle_status=complete. Quantidade de ações
+manuais ainda precisa corresponder aos ciclos; LockedHint não foi comparado.
+PrepareForSleep sem eventos: suspensão não testada nesse ensaio.
+Próximo passo: watcher isolado com suspensão/retomada manual e correlação dos
+ciclos GNOME conforme o protocolo. Degraded/retorno 1 é esperado quando
 falta o ID e LockedHint fica indisponível; não escolher um ID arbitrário.
 O agente continua sem ambiente gráfico herdado e não executou esses ensaios reais.
 

@@ -57,7 +57,11 @@ Continuação publicada no commit `dfe2a24`: ADR-008 resume ciclos ordenados,
 duplicatas e sinais sem par; ADR-009 torna XDG_SESSION_ID opcional, com LockedHint
 indisponível e sem buscar outra sessão. [CI via Compose](https://github.com/UnicHeld/digitalmirror/actions/runs/37553831948)
 passou em Python 3.11/3.13 com 40 testes, imagens dev/runtime e build. Issue #2
-e Project sincronizados. Nenhum ciclo real foi observado nesta execução.
+e Project sincronizados. Evidências posteriores fornecidas pelo usuário via
+Compose: dez fontes read-ok nas 12 amostras/5s; CPU de 1,137% acima da referência
+RNF-03 de ≤1%. Watcher de 120s recebeu dois ciclos GNOME completos durante ensaio
+manual Windows+L; quantidade de ações ainda precisa ser correlacionada. LockedHint
+ausente e PrepareForSleep sem eventos. US-02.2/03/04 e C0 continuam pendentes.
 
 **Aceite:** relatório de fontes disponíveis e ausentes, precisão observada e custo básico. Diagnóstico é só leitura, sem mover foco ou gerar entradas. As fontes indisponíveis têm fallback definido ou estado desconhecido. Evidência do alvo real registrada sem conteúdo pessoal.
 
