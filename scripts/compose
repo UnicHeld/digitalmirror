@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+# Usar sempre IDs do usuário que chamou Compose, sem arquivos pessoais versionados.
+export DIGITALMIRROR_UID="$(id -u)"
+export DIGITALMIRROR_GID="$(id -g)"
+digitalmirror_security=$(docker info --format '{{json .SecurityOptions}}')
+case "$digitalmirror_security" in
+    *'name=rootless'*)
+        # UID 0 no namespace rootless corresponde ao usuário não privilegiado do host.
+        export DIGITALMIRROR_UID=0
+        export DIGITALMIRROR_GID=0
+        ;;
+esac
+digitalmirror_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$digitalmirror_root"
+exec docker compose -f compose.yaml "$@"

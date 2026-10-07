@@ -1,0 +1,9 @@
+#!/bin/sh
+# Este script executa dentro do serviço dev; o host chama scripts/compose.
+set -eu
+ruff format --check .
+ruff check .
+mypy
+python -m unittest discover -s tests -v
+# Dependências de build já instaladas na imagem; checks funcionam sem rede.
+python -m build --no-isolation

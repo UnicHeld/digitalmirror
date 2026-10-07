@@ -1,6 +1,7 @@
 # DigitalMirror — system design
 
-Versão 0.1 · 06/10/2026. Contrato de métricas: [product-spec.md](product-spec.md).
+Versão 0.2 · 06/10/2026. Contrato de métricas: [product-spec.md](product-spec.md).
+Execução obrigatória via Docker/Compose: [ADR-007](adr/007-docker-compose.md).
 
 ## 5. System design
 
@@ -19,7 +20,17 @@ flowchart TD
   SYS --> API
 ```
 
-COL, ENG e API são módulos de um único processo Python em produção. O Native Messaging usa um pequeno processo intermediário somente enquanto o navegador mantém conexão. Uma conexão SQLite escritora tem dono único; leituras usam conexões próprias. Uvicorn roda com um worker, sem reload. O navegador já instalado renderiza o dashboard sob demanda.
+COL, ENG e API são módulos de um único processo Python no contêiner desktop em
+produção. O Native Messaging usa bridge no contêiner somente enquanto o navegador
+do host mantém conexão, com launcher shell no host planejado no EP-06. Uma conexão
+SQLite escritora tem dono único; leituras usam conexões próprias. Uvicorn roda com
+um worker, sem reload. O navegador do host renderiza o dashboard sob demanda.
+
+Dockerfile possui alvos runtime/development; Compose tem dev (checks sem rede,
+workspace, sem sessão) e desktop (sockets da sessão explicitamente montados,
+filesystem read-only, tmpfs, capabilities removidas). UID/GID preservam o usuário
+do host; rootless usa 0 internos, mapeados ao usuário sem privilégios. Imagens
+recebem dependências no build; não instalar Python/venv no host.
 
 **ADR-001: aplicação local, sem servidor externo.** Histórico e API funcionam offline. O observador não envia telemetria à internet.
 
@@ -30,6 +41,11 @@ COL, ENG e API são módulos de um único processo Python em produção. O Nativ
 **ADR-004: funções de métricas puras.** Recebem calendário, intervalos e versão da política; retornam totais reproduzíveis. API não contém fórmulas independentes.
 
 **ADR-005: foco global como padrão.** Monitor principal é dimensão de filtro, sem substituir foco. Uma opção “somente monitor principal” terá denominador e rótulo próprios.
+
+**ADR-007: Docker/Compose obrigatório.** Substitui execução Python direta. X11,
+GNOME, logind e navegador observados continuam no host; não executar desktop virtual.
+Não montar home, /proc ou Docker socket nem usar privileged/xhost +. Socket
+read-only não restringe métodos X11/D-Bus: a passividade vem dos comandos permitidos.
 
 ### 5.2 Coletor da sessão
 
@@ -105,6 +121,11 @@ Datas são `YYYY-MM-DD` no fuso configurado; tempos em segundos; percentuais com
 
 Bind somente em `127.0.0.1`. Validar Host e Origin, sem CORS genérico. Dados de leitura também exigem sessão local para evitar exposição a páginas externas. Um comando `digitalmirror open` gera token de bootstrap temporário, abre a URL local e o troca por cookie HttpOnly/SameSite; ações mutáveis exigem CSRF token. Nenhum token vai para repositório, exportação ou logs. A credencial protege acesso web; não isola dados contra processos com o mesmo usuário do sistema.
 
+O desktop usa rede host Linux, sem publicar portas, para preservar esse bind.
+Docker rootless anterior a Engine 29.5 tem namespace de rede RootlessKit: serve para
+o doctor por sockets, mas não garante loopback do host para a futura API. EP-07
+exige Engine compatível e teste de bind/acesso/isolamento, sem mudar para 0.0.0.0.
+
 ### 5.7 Dashboard
 
 A tela diária oferece data selecionada, estado atual, fontes disponíveis e oito horas previstas. Cards: presença estimada, cobertura, interação recente, tempo bloqueado, tempo sem dados, primeiro horário observado e último horário observado/declarado. Indicadores durante o dia usam a jornada decorrida com rótulo explícito.
@@ -117,13 +138,25 @@ O dashboard consulta a cada 30 s, suspende polling quando a página fica oculta 
 
 ### 5.8 Autostart e ciclo de vida
 
-Instalar no escopo do usuário. Serviço vinculado à sessão gráfica, com `PartOf=graphical-session.target`, reinício em falha e backoff. O instalador valida a integração efetiva do GNOME; `graphical-session.target` não será presumido ativo sem verificar. Se necessário, um arquivo XDG autostart inicia o mesmo serviço com o ambiente correto.
+Distribuir imagens e launchers Compose no escopo do usuário. Serviço systemd user
+chama Compose a partir da sessão gráfica, com `PartOf=graphical-session.target`,
+reinício em falha e backoff. O instalador valida a integração efetiva do GNOME;
+`graphical-session.target` não será presumido ativo sem verificar. Se necessário,
+XDG autostart inicia o mesmo serviço com ambiente correto. Não usar restart always
+como substituto de login/logout nem instalar Python diretamente no host.
 
 Importar `DISPLAY`, `XAUTHORITY` quando presente e o ambiente da sessão D-Bus a partir da sessão real; não fixar `DISPLAY=:0` ou caminho de autoridade. Não habilitar linger como solução para acessar uma sessão ainda inexistente. Um lock de instância evita duplicação caso dois mecanismos de início sejam configurados.
 
 Ligar o computador inicia a sessão de login; a observação pessoal começa automaticamente depois do login gráfico. Antes disso, a sessão do usuário ainda não existe. Não exige abertura manual do programa nem do dashboard. Logout encerra a coleta; novo login cria nova execução. Histórico atravessa reboot.
 
 Locais: configuração em `~/.config/digitalmirror/`, banco em `~/.local/share/digitalmirror/`, socket e segredos temporários em `$XDG_RUNTIME_DIR/digitalmirror/`. Diretórios privados e arquivos de dados com permissões restritas. Logs no journal sem títulos/URLs e com limites de volume.
+
+Os diretórios privados serão bind mounts específicos do runtime no EP-04/08;
+não montar o home inteiro. Reiniciar/recriar contêiner preserva dados. Não usar
+`docker compose down -v` como rotina de atualização/desinstalação.
+Para o spike, o launcher mapeia somente X11/Xauthority e sockets D-Bus da sessão
+e sistema. O manager systemd user do host é consultado via GetUnit/ActiveState
+por D-Bus, sem depender de systemd rodando dentro do contêiner.
 
 
 ## 6. Metas de qualidade e validação
@@ -154,4 +187,3 @@ Se o protótipo com subprocessos exceder CPU/memória, migrar o adaptador para c
 - Fluxo completo: iniciar GNOME → serviço automático → usar app/aba → bloquear/desbloquear → consultar dashboard → reiniciar → histórico preservado.
 - Segurança local: bind, Host, Origin, CSRF, cookie e IPC privado; payloads inválidos não derrubam o processo.
 - Soak de 8h: RSS, CPU, latência, amostras atrasadas e tamanho SQLite/WAL.
-

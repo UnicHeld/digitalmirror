@@ -28,3 +28,4 @@ exports/
 backups/
 config.local.*
 *.token
+compose.local.*

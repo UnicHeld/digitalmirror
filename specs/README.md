@@ -1,8 +1,11 @@
 # Fluxo de specs por funcionalidade
 
-Os contratos iniciais estão em `../docs/product-spec.md` e `../docs/system-design.md`. Esta pasta receberá as specs de cada fatia antes de sua implementação; não existem funcionalidades prontas só por haver uma spec.
+Os contratos iniciais estão em `../docs/product-spec.md` e `../docs/system-design.md`.
+`001-foundation/` contém o EP-01 implementado; `002-session-collector/` contém a
+fatia do spike EP-02, com ensaios reais ainda pendentes. Demais pastas serão criadas
+antes da respectiva implementação; uma spec sozinha não significa funcionalidade pronta.
 
-| Pasta a criar | Responsabilidade | Épicos |
+| Pasta | Responsabilidade | Épicos |
 | --- | --- | --- |
 | `001-foundation/` | Configuração, qualidade, estados, privacidade e contratos | EP-01 / EP-04 |
 | `002-session-collector/` | Spike, janela/app, idle, lock/sleep, monitores e gaps | EP-02 / EP-03 |
@@ -11,6 +14,11 @@ Os contratos iniciais estão em `../docs/product-spec.md` e `../docs/system-desi
 | `005-local-dashboard/` | API, telas, filtros, controles e acesso local | EP-07 |
 | `006-desktop-lifecycle/` | Instalação, autostart, desempenho e E2E | EP-08 / EP-09 |
 | `007-history-calibration/` | Histórico, exportação, retenção e calibração | EP-10 / EP-12 |
+| `008-docker-workflow/` | Execução obrigatória Docker/Compose e migração de checks/CI | EP-01/02; planos EP-04/06/07/08/09 |
+
+Todas as specs usam o fluxo Docker/Compose do ADR-007. Não instalar ferramentas
+Python no host; checks usam `sh scripts/compose run --rm dev` e sinais reais usam
+o launcher desktop com a sessão GNOME/X11 do host explicitamente herdada.
 
 ## Arquivos por pasta
 

@@ -1,0 +1,358 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Casos sintéticos DigitalMirror v1",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]+$"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requirements": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^(RF|RNF)-[0-9]{2}$"
+            }
+          },
+          "policy": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "const": 1
+              },
+              "timezone": {
+                "const": "America/Sao_Paulo"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "start": {
+                "const": "09:00"
+              },
+              "end": {
+                "const": "18:00"
+              },
+              "lunch_start": {
+                "type": "string",
+                "pattern": "^[0-2][0-9]:[0-5][0-9]$"
+              },
+              "lunch_end": {
+                "type": "string",
+                "pattern": "^[0-2][0-9]:[0-5][0-9]$"
+              },
+              "active_threshold_seconds": {
+                "const": 60
+              },
+              "idle_threshold_seconds": {
+                "const": 300
+              },
+              "collect_outside_workday": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "version",
+              "timezone",
+              "date",
+              "start",
+              "end",
+              "lunch_start",
+              "lunch_end",
+              "active_threshold_seconds",
+              "idle_threshold_seconds",
+              "collect_outside_workday"
+            ],
+            "additionalProperties": false
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "Z$"
+          },
+          "intervals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "start": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "Z$"
+                },
+                "end": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "Z$"
+                },
+                "state": {
+                  "enum": [
+                    "ACTIVE",
+                    "LOW_ACTIVITY",
+                    "IDLE",
+                    "LOCKED",
+                    "SUSPENDED",
+                    "UNKNOWN",
+                    "PAUSED"
+                  ]
+                },
+                "app": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "tab": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "hostname": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "pattern": "^[a-z0-9.-]+\\.example$"
+                },
+                "source": {
+                  "enum": [
+                    "synthetic-x11",
+                    "synthetic-logind",
+                    "synthetic-gap",
+                    "manual"
+                  ]
+                },
+                "quality": {
+                  "enum": [
+                    "observed",
+                    "estimated",
+                    "unknown"
+                  ]
+                },
+                "reason": {
+                  "enum": [
+                    "valid",
+                    "late-start",
+                    "crash",
+                    "suspend-confirmed",
+                    "ambiguous-browser",
+                    "boot-change",
+                    "clock-discontinuity",
+                    "explicit-pause"
+                  ]
+                }
+              },
+              "required": [
+                "start",
+                "end",
+                "state",
+                "app",
+                "tab",
+                "hostname",
+                "source",
+                "quality",
+                "reason"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "annotations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "meeting",
+                    "declared-start",
+                    "declared-end"
+                  ]
+                },
+                "start": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "Z$"
+                },
+                "end": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "Z$"
+                }
+              },
+              "required": [
+                "kind",
+                "start",
+                "end"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "expected": {
+            "type": "object",
+            "properties": {
+              "daily_seconds": {
+                "const": 28800
+              },
+              "elapsed_seconds": {
+                "type": "number",
+                "minimum": 0
+              },
+              "presence_seconds": {
+                "type": "number",
+                "minimum": 0
+              },
+              "observed_seconds": {
+                "type": "number",
+                "minimum": 0
+              },
+              "state_seconds": {
+                "type": "object",
+                "properties": {
+                  "ACTIVE": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "LOW_ACTIVITY": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "IDLE": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "LOCKED": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "SUSPENDED": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "UNKNOWN": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "PAUSED": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "ACTIVE",
+                  "LOW_ACTIVITY",
+                  "IDLE",
+                  "LOCKED",
+                  "SUSPENDED",
+                  "UNKNOWN",
+                  "PAUSED"
+                ],
+                "additionalProperties": false
+              },
+              "presence_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 100
+              },
+              "coverage_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 100
+              },
+              "recent_interaction_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 100
+              },
+              "daily_progress_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 100
+              },
+              "provisional": {
+                "type": "boolean"
+              },
+              "app_seconds": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "tab_seconds": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "external_seconds": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "daily_seconds",
+              "elapsed_seconds",
+              "presence_seconds",
+              "observed_seconds",
+              "state_seconds",
+              "presence_pct",
+              "coverage_pct",
+              "recent_interaction_pct",
+              "daily_progress_pct",
+              "provisional",
+              "app_seconds",
+              "tab_seconds",
+              "external_seconds"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "requirements",
+          "policy",
+          "as_of",
+          "intervals",
+          "annotations",
+          "expected"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "cases"
+  ],
+  "additionalProperties": false
+}

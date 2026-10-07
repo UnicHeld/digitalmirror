@@ -10,6 +10,10 @@ Campos: Status (`Backlog`, `Ready`, `In Progress`, `Review`, `Done`), Prioridade
 
 M0 = spike e contratos. M1 = versão utilizável completa em Chrome/Chromium, incluindo autostart e dashboard. M2 = Firefox, histórico avançado e calibração. Não estabelecer datas fictícias sem medir o spike; ordenar por dependência.
 
+Execução vigente: **Docker/Compose obrigatório** para desenvolvimento, CI,
+diagnóstico e futuro runtime (ADR-007). Itens abaixo adaptam o plano local;
+issues/Project no GitHub ainda refletem a publicação inicial e não foram editados.
+
 ### EP-01 · [#1](https://github.com/UnicHeld/digitalmirror/issues/1) — Contrato do produto e base SDD
 
 **Prioridade:** P0 · **Fase:** M0 · **Spec:** 001 · **Dependências:** nenhuma.
@@ -18,9 +22,13 @@ M0 = spike e contratos. M1 = versão utilizável completa em Chrome/Chromium, in
 
 **Histórias/tarefas:**
 
-- [ ] US-01.1 — Versionar spec, plan, tasks e estrutura de ADRs.
-- [ ] US-01.2 — Fixar contrato de estados, unidades, qualidade e política de privacidade.
-- [ ] US-01.3 — Criar fixtures dos casos de jornada e critérios de conclusão.
+- [x] US-01.1 — Versionar spec, plan, tasks e estrutura de ADRs.
+- [x] US-01.2 — Fixar contrato de estados, unidades, qualidade e política de privacidade.
+- [x] US-01.3 — Criar fixtures dos casos de jornada e critérios de conclusão.
+
+Evidência local: `specs/001-foundation/`, `docs/requirements.md`, `docs/adr/`,
+16 casos em `tests/fixtures/workday-cases.json` e CI por descoberta. Testes/checks
+executados no workspace; CI remota e issue/Project não atualizados.
 
 **Aceite:** documentos incluem 09–18, almoço de 1h, fórmulas distintas de presença/interação, gaps e limites de inferência. Cada RF/RNF possui épico responsável. CI verifica schema das fixtures e testes do motor quando implementado. Nenhuma credencial ou telemetria pessoal faz parte dos exemplos.
 
@@ -36,6 +44,10 @@ M0 = spike e contratos. M1 = versão utilizável completa em Chrome/Chromium, in
 - [ ] US-02.2 — Spike valida bloqueio, desbloqueio, suspensão e retomada reais.
 - [ ] US-02.3 — Spike mede custo de polling e integração de autostart com GNOME.
 - [ ] US-02.4 — Prova de correlação navegador/X11 com duas janelas e perfis.
+
+Progresso local: comando doctor, medidor finito e watcher de sinais implementados,
+com testes sintéticos e diagnóstico real de logind. Ensaios gráficos e aceite final
+pendentes; veja `docs/spike-ep02-report.md`. As histórias permanecem abertas.
 
 **Aceite:** relatório de fontes disponíveis e ausentes, precisão observada e custo básico. Diagnóstico é só leitura, sem mover foco ou gerar entradas. As fontes indisponíveis têm fallback definido ou estado desconhecido. Evidência do alvo real registrada sem conteúdo pessoal.
 
@@ -125,8 +137,8 @@ M0 = spike e contratos. M1 = versão utilizável completa em Chrome/Chromium, in
 
 **Histórias/tarefas:**
 
-- [ ] US-08.1 — Instalar ambiente Python e dependências no escopo do usuário.
-- [ ] US-08.2 — systemd user/XDG autostart validado com ambiente gráfico real.
+- [ ] US-08.1 — Distribuir imagens Docker/Compose e launchers no escopo do usuário.
+- [ ] US-08.2 — systemd user/XDG autostart iniciando Compose com ambiente gráfico real.
 - [ ] US-08.3 — Lock de instância, backoff, stop/logout e recuperação.
 - [ ] US-08.4 — CLI start/stop/status/doctor/open e desinstalação documentada.
 
@@ -140,7 +152,7 @@ M0 = spike e contratos. M1 = versão utilizável completa em Chrome/Chromium, in
 
 **Histórias/tarefas:**
 
-- [ ] US-09.1 — Benchmark representativo de 8h e relatório RSS/CPU/atrasos.
+- [ ] US-09.1 — Benchmark de 8h em Docker e relatório RSS/CPU/atrasos, separando overhead do daemon.
 - [ ] US-09.2 — Otimizar adaptadores/cache/transações quando metas falharem.
 - [ ] US-09.3 — E2E de apps/abas/lock/sleep/crash/reboot/offline.
 - [ ] US-09.4 — Validação com 30 dias detalhados e 180 dias agregados.
@@ -209,4 +221,3 @@ flowchart TD
 ```
 
 Checkpoint C0: fontes reais e contratos aprovados no spike. C1: um app produz intervalo e resumo local. C2: jornada + abas + dashboard fecham nos fixtures. C3: instalação automática, histórico/exportação e soak completam M1. C4: Firefox e calibração completam M2.
-

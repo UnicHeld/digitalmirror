@@ -1,0 +1,48 @@
+#!/bin/sh
+set -eu
+
+fail() {
+    printf '%s\n' "$1" >&2
+    exit 2
+}
+
+[ "$(uname -s)" = Linux ] || fail 'O spike desktop exige Docker Engine local no Linux.'
+[ "$(id -u)" -ne 0 ] || fail 'Execute como o usuário da sessão GNOME, sem sudo.'
+[ "${XDG_SESSION_TYPE:-}" = x11 ] || fail 'Execute no terminal da sessão GNOME/X11.'
+[ -n "${DISPLAY:-}" ] || fail 'DISPLAY da sessão não foi recebido.'
+[ -n "${XDG_SESSION_ID:-}" ] || fail 'XDG_SESSION_ID da sessão não foi recebido.'
+[ -n "${XDG_RUNTIME_DIR:-}" ] || fail 'XDG_RUNTIME_DIR da sessão não foi recebido.'
+[ -n "${XAUTHORITY:-}" ] || fail 'XAUTHORITY deve vir da sessão gráfica; não adivinhar o caminho.'
+[ -f "$XAUTHORITY" ] && [ -r "$XAUTHORITY" ] || fail 'Xauthority da sessão ausente ou sem leitura.'
+[ -S "$XDG_RUNTIME_DIR/bus" ] || fail 'Socket D-Bus do usuário não está disponível.'
+[ -S /run/dbus/system_bus_socket ] || fail 'Socket D-Bus de sistema não está disponível.'
+case "${DBUS_SESSION_BUS_ADDRESS:-}" in
+    "unix:path=$XDG_RUNTIME_DIR/bus"|"unix:path=$XDG_RUNTIME_DIR/bus,"*) ;;
+    *) fail 'A integração exige o barramento Unix da sessão em XDG_RUNTIME_DIR/bus.' ;;
+esac
+case "$DISPLAY" in
+    :*) digitalmirror_display=${DISPLAY#:}; digitalmirror_display=${digitalmirror_display%%.*} ;;
+    *) fail 'DISPLAY precisa apontar para um servidor X11 Unix local.' ;;
+esac
+case "$digitalmirror_display" in
+    ''|*[!0-9]*) fail 'DISPLAY local inválido.' ;;
+esac
+[ -S "/tmp/.X11-unix/X$digitalmirror_display" ] || fail 'Socket do DISPLAY local indisponível.'
+
+# Bind mounts precisam estar no mesmo host do daemon, sem recuperar outra sessão.
+digitalmirror_endpoint=${DOCKER_HOST:-}
+if [ -z "$digitalmirror_endpoint" ]; then
+    digitalmirror_endpoint=$(docker context inspect --format '{{.Endpoints.docker.Host}}')
+fi
+case "$digitalmirror_endpoint" in
+    unix://*) ;;
+    *) fail 'A integração desktop exige daemon Docker local com socket Unix.' ;;
+esac
+digitalmirror_os=$(docker info --format '{{.OperatingSystem}}')
+case "$digitalmirror_os" in
+    *'Docker Desktop'*) fail 'Use Docker Engine nativo no Debian para observar a sessão real.' ;;
+esac
+
+export DIGITALMIRROR_HOSTNAME="$(uname -n)"
+digitalmirror_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+exec sh "$digitalmirror_root/scripts/compose" -f compose.desktop.yaml --profile desktop "$@"

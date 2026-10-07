@@ -1,6 +1,7 @@
 # DigitalMirror — contrato do produto
 
-Versão 0.1 · 06/10/2026 · Status: especificação inicial; aplicação pendente.
+Versão 0.2 · 06/10/2026 · Contratos/diagnóstico M0 implementados; aplicação M1 pendente.
+Estratégia de execução atualizada pelo [ADR-007](adr/007-docker-compose.md).
 
 System design em [system-design.md](system-design.md); backlog em [backlog.md](backlog.md).
 
@@ -17,6 +18,7 @@ O programa observa a sessão sem gerar entradas, mudar foco ou interferir em out
 | Item | Decisão |
 | --- | --- |
 | Sistema alvo | Debian 12, Python 3.11+, GNOME, X11 |
+| Execução e desenvolvimento | Docker Engine local Linux + Compose; Python/ferramentas na imagem bookworm |
 | Fuso | `America/Sao_Paulo`; timestamps persistidos em UTC |
 | Jornada | Segunda a sexta, 09:00–18:00 |
 | Almoço | Uma hora; 12:00–13:00 como padrão provisório, editável por dia |
@@ -25,7 +27,7 @@ O programa observa a sessão sem gerar entradas, mudar foco ou interferir em out
 | Consolidação | Blocos locais de 5 min; durações reais em segundos |
 | Dashboard | Consulta a cada 30 s enquanto estiver aberto |
 | Navegador inicial | Chrome/Chromium; Firefox na versão seguinte |
-| Recursos | Um processo principal; SQLite; HTML/CSS/JS sem framework obrigatório |
+| Recursos | Um processo principal no contêiner; SQLite persistente; HTML/CSS/JS no browser do host |
 | Captura de títulos | Desativada na persistência por padrão; opt-in |
 | Navegação persistida | Hostname e identificador efêmero de aba; sem caminho/query da URL |
 | Coleta fora da jornada | Desativada por padrão; modo opcional separado |
@@ -54,6 +56,7 @@ A especificação versionada será o contrato de cada entrega. Um documento desc
 | `src/digitalmirror/` | Coletor, motor, armazenamento, API e CLI |
 | `extensions/chromium/` | WebExtension e manifesto do Native Messaging |
 | `packaging/` | Serviço systemd e instalação por usuário |
+| `Dockerfile`, `compose*.yaml`, `scripts/` | Imagens, serviços dev/desktop e launchers de sessão/checks |
 | `tests/fixtures/` | Sessões sintéticas reproduzíveis |
 
 Cada pasta de spec contém `spec.md`, `plan.md`, `tasks.md` e, quando necessário, `contracts/`. `spec.md` define histórias, regras, casos negativos e critérios de aceite. `plan.md` liga essas regras aos componentes. `tasks.md` ordena trabalhos pequenos com referência ao requisito e ao teste correspondente.
@@ -205,6 +208,8 @@ Uma visualização opcional “amostra a cada 5 min” mostra somente a observa�
 ## 6. Metas de qualidade e validação
 
 As metas abaixo serão medidas no Debian do usuário; não são consumo já verificado.
+Executar medições em Docker; separar recursos do processo/bridge e overhead do
+daemon/contêiner. Evidência anterior à migração não demonstra cumprimento no Docker.
 
 | ID | Meta de aceite |
 | --- | --- |

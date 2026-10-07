@@ -1,0 +1,42 @@
+name: digitalmirror
+
+x-common: &common
+  user: "${DIGITALMIRROR_UID:-1000}:${DIGITALMIRROR_GID:-1000}"
+  working_dir: /app
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs:
+    - /tmp:rw,nosuid,nodev,mode=1777
+  init: true
+
+services:
+  dev:
+    <<: *common
+    image: digitalmirror-dev:${DIGITALMIRROR_PYTHON_VERSION:-3.11}
+    build:
+      context: .
+      target: development
+      args:
+        PYTHON_VERSION: "${DIGITALMIRROR_PYTHON_VERSION:-3.11}"
+    network_mode: none
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+        bind:
+          create_host_path: false
+    command: [sh, scripts/check]
+
+  desktop:
+    <<: *common
+    profiles: [desktop]
+    image: digitalmirror-runtime:${DIGITALMIRROR_PYTHON_VERSION:-3.11}
+    build:
+      context: .
+      target: runtime
+      args:
+        PYTHON_VERSION: "${DIGITALMIRROR_PYTHON_VERSION:-3.11}"
+    # Linux: preserva o bind futuro da API somente em 127.0.0.1:8765.
+    network_mode: host
+    command: [digitalmirror, doctor]

@@ -2,15 +2,25 @@
 
 ## Estado e fonte de verdade
 
-Este repositório começa somente com planejamento. Não presuma existir aplicação, dependências instaladas ou suíte de testes. Leia `docs/product-spec.md`, `docs/system-design.md`, `docs/backlog.md` e `specs/README.md` antes de implementar. As issues #1–#12 correspondem a EP-01–EP-12.
+EP-01 contém contratos/fixtures e EP-02 tem CLI de diagnóstico; coleta contínua, dados, API e dashboard permanecem pendentes. Leia `docs/product-spec.md`, `docs/system-design.md`, `docs/backlog.md` e `specs/README.md` antes de implementar. As issues #1–#12 correspondem a EP-01–EP-12.
 
 ## Escopo técnico
 
 - Alvo: Debian 12 / Python 3.11+ / GNOME / X11. Não use recursos exclusivos do Python 3.12 sem ajustar o suporte explicitamente.
-- Monólito modular Python, SQLite/WAL, API local e HTML/CSS/JS. Não introduzir Electron, containers, broker ou cloud no runtime sem justificar em ADR.
+- Monólito modular Python em Docker/Compose, SQLite/WAL, API local e HTML/CSS/JS. Docker é obrigatório conforme ADR-007; não introduzir Electron, broker ou cloud no runtime sem ADR.
 - API somente `127.0.0.1:8765`; processo principal único e fila limitada.
 - Coletor estritamente passivo: nenhuma simulação de teclado/mouse, mudança de foco, impedimento de idle ou interação com xOne.
 - Navegador: foco real no X11 + metadados de extensão. App/aba em segundo plano não recebe foco.
+
+## Execução obrigatória via Docker
+
+- Sempre executar dependências Python, formatter, lint, tipos, testes, build e CLI em contêiner com Docker Compose. Não criar venv nem instalar/executar ferramentas Python no host.
+- Build: `sh scripts/compose build dev desktop`. Checks: `sh scripts/compose run --rm dev`. Formatar: `sh scripts/compose run --rm dev ruff format .`.
+- Diagnóstico isolado: `sh scripts/compose run --rm dev digitalmirror doctor`. Diagnóstico da sessão real: `sh scripts/compose-desktop run --rm desktop` no terminal GNOME/X11.
+- Host fornece Docker Engine/Compose e a sessão gráfica. Sem VM/desktop virtual como substituto de ensaio do host. Imagens usam Debian bookworm/Python 3.11 por padrão.
+- Preservar usuário do host: UID/GID iguais em Docker rootful, 0 internos em rootless (mapeiam ao usuário sem privilégios). Usar os launchers para detectar o modo. Sem privileged, xhost +, Docker socket ou home inteiro montado. Acesso gráfico via mounts explícitos read-only de sockets/Xauthority; não criar diretórios no lugar de sockets ausentes.
+- Runtime desktop usa rede host Linux para preservar API somente em `127.0.0.1:8765`; nenhum bind `0.0.0.0`. Em rootless, API exige Engine 29.5+ e validação EP-07; versões anteriores atendem checks/doctor por sockets. Dev não recebe sockets e executa checks sem rede.
+- Preservar evidências históricas e identificar novas medições em Docker. Ensaios GNOME/X11, autostart/perfis e overhead Docker continuam pendentes até verificação real.
 
 ## Regras que a implementação deve preservar
 

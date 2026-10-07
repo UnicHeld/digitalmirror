@@ -1,0 +1,1214 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "normal-day",
+      "description": "Seção 4.6: A=360m, R=60m, I=30m, L=30m.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T21:00:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T15:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T16:00:00Z",
+          "end": "2026-01-12T19:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T19:00:00Z",
+          "end": "2026-01-12T20:00:00Z",
+          "state": "LOW_ACTIVITY",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T20:00:00Z",
+          "end": "2026-01-12T20:30:00Z",
+          "state": "IDLE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T20:30:00Z",
+          "end": "2026-01-12T21:00:00Z",
+          "state": "LOCKED",
+          "app": null,
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 28800,
+        "presence_seconds": 27000,
+        "observed_seconds": 28800,
+        "state_seconds": {
+          "ACTIVE": 21600,
+          "LOW_ACTIVITY": 3600,
+          "IDLE": 1800,
+          "LOCKED": 1800,
+          "SUSPENDED": 0,
+          "UNKNOWN": 0,
+          "PAUSED": 0
+        },
+        "presence_pct": 93.75,
+        "coverage_pct": 100.0,
+        "recent_interaction_pct": 80.0,
+        "daily_progress_pct": 93.75,
+        "provisional": false,
+        "app_seconds": {
+          "terminal": 27000
+        },
+        "tab_seconds": {},
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "partial-day",
+      "description": "Seção 4.6: presença de 100m às 11h, jornada decorrida 120m.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T14:00:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T13:40:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T13:40:00Z",
+          "end": "2026-01-12T14:00:00Z",
+          "state": "LOCKED",
+          "app": null,
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 7200,
+        "presence_seconds": 6000,
+        "observed_seconds": 7200,
+        "state_seconds": {
+          "ACTIVE": 6000,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 1200,
+          "SUSPENDED": 0,
+          "UNKNOWN": 0,
+          "PAUSED": 0
+        },
+        "presence_pct": 83.33333333333333,
+        "coverage_pct": 100.0,
+        "recent_interaction_pct": 100.0,
+        "daily_progress_pct": 20.833333333333332,
+        "provisional": true,
+        "app_seconds": {
+          "terminal": 6000
+        },
+        "tab_seconds": {},
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "late-start",
+      "description": "Seção 4.6: coleta inicia 09:20; não inferir atraso real.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T21:00:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T12:20:00Z",
+          "state": "UNKNOWN",
+          "app": null,
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-gap",
+          "quality": "unknown",
+          "reason": "late-start"
+        },
+        {
+          "start": "2026-01-12T12:20:00Z",
+          "end": "2026-01-12T15:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T16:00:00Z",
+          "end": "2026-01-12T21:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 28800,
+        "presence_seconds": 27600,
+        "observed_seconds": 27600,
+        "state_seconds": {
+          "ACTIVE": 27600,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 1200,
+          "PAUSED": 0
+        },
+        "presence_pct": 95.83333333333333,
+        "coverage_pct": 95.83333333333333,
+        "recent_interaction_pct": 100.0,
+        "daily_progress_pct": 95.83333333333333,
+        "provisional": false,
+        "app_seconds": {
+          "terminal": 27600
+        },
+        "tab_seconds": {},
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "mixed-focus-block",
+      "description": "Seção 4.6: IDE 290s e browser 10s; preservar composição.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T12:05:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T12:04:50Z",
+          "state": "ACTIVE",
+          "app": "ide",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T12:04:50Z",
+          "end": "2026-01-12T12:05:00Z",
+          "state": "ACTIVE",
+          "app": "browser",
+          "tab": "tab-1",
+          "hostname": "work.example",
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 300,
+        "presence_seconds": 300,
+        "observed_seconds": 300,
+        "state_seconds": {
+          "ACTIVE": 300,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 0,
+          "PAUSED": 0
+        },
+        "presence_pct": 100.0,
+        "coverage_pct": 100.0,
+        "recent_interaction_pct": 100.0,
+        "daily_progress_pct": 1.0416666666666667,
+        "provisional": true,
+        "app_seconds": {
+          "ide": 290,
+          "browser": 10
+        },
+        "tab_seconds": {
+          "tab-1": 10
+        },
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "background-browser",
+      "description": "Seção 4.6: aba em segundo plano recebe zero.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T12:20:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T12:20:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 1200,
+        "presence_seconds": 1200,
+        "observed_seconds": 1200,
+        "state_seconds": {
+          "ACTIVE": 1200,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 0,
+          "PAUSED": 0
+        },
+        "presence_pct": 100.0,
+        "coverage_pct": 100.0,
+        "recent_interaction_pct": 100.0,
+        "daily_progress_pct": 4.166666666666667,
+        "provisional": true,
+        "app_seconds": {
+          "terminal": 1200
+        },
+        "tab_seconds": {},
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "reading-idle-boundaries",
+      "description": "Seção 4.6: leitura 10m; idle 60s e 300s mudam estado, não foco.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T12:10:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T12:01:00Z",
+          "state": "ACTIVE",
+          "app": "browser",
+          "tab": "tab-1",
+          "hostname": "work.example",
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T12:01:00Z",
+          "end": "2026-01-12T12:05:00Z",
+          "state": "LOW_ACTIVITY",
+          "app": "browser",
+          "tab": "tab-1",
+          "hostname": "work.example",
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T12:05:00Z",
+          "end": "2026-01-12T12:10:00Z",
+          "state": "IDLE",
+          "app": "browser",
+          "tab": "tab-1",
+          "hostname": "work.example",
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 600,
+        "presence_seconds": 600,
+        "observed_seconds": 600,
+        "state_seconds": {
+          "ACTIVE": 60,
+          "LOW_ACTIVITY": 240,
+          "IDLE": 300,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 0,
+          "PAUSED": 0
+        },
+        "presence_pct": 100.0,
+        "coverage_pct": 100.0,
+        "recent_interaction_pct": 10.0,
+        "daily_progress_pct": 2.0833333333333335,
+        "provisional": true,
+        "app_seconds": {
+          "browser": 600
+        },
+        "tab_seconds": {
+          "tab-1": 600
+        },
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "shifted-lunch",
+      "description": "Seção 4.6: almoço 12:30–13:30 mantém 480m.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:30",
+        "lunch_end": "13:30",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T21:00:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T15:30:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T16:30:00Z",
+          "end": "2026-01-12T21:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 28800,
+        "presence_seconds": 28800,
+        "observed_seconds": 28800,
+        "state_seconds": {
+          "ACTIVE": 28800,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 0,
+          "PAUSED": 0
+        },
+        "presence_pct": 100.0,
+        "coverage_pct": 100.0,
+        "recent_interaction_pct": 100.0,
+        "daily_progress_pct": 100.0,
+        "provisional": false,
+        "app_seconds": {
+          "terminal": 28800
+        },
+        "tab_seconds": {},
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "manual-meeting",
+      "description": "Seção 4.6: reunião manual mantém IDLE, sem fabricar inputs.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T12:05:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T12:05:00Z",
+          "state": "IDLE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        }
+      ],
+      "annotations": [
+        {
+          "kind": "meeting",
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T12:05:00Z"
+        }
+      ],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 300,
+        "presence_seconds": 300,
+        "observed_seconds": 300,
+        "state_seconds": {
+          "ACTIVE": 0,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 300,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 0,
+          "PAUSED": 0
+        },
+        "presence_pct": 100.0,
+        "coverage_pct": 100.0,
+        "recent_interaction_pct": 0.0,
+        "daily_progress_pct": 1.0416666666666667,
+        "provisional": true,
+        "app_seconds": {
+          "terminal": 300
+        },
+        "tab_seconds": {},
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "confirmed-suspend",
+      "description": "Seção 4.6: 14–15h não recebe app; suspensão exige confirmação.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T21:00:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T15:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T16:00:00Z",
+          "end": "2026-01-12T17:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T17:00:00Z",
+          "end": "2026-01-12T18:00:00Z",
+          "state": "SUSPENDED",
+          "app": null,
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-logind",
+          "quality": "observed",
+          "reason": "suspend-confirmed"
+        },
+        {
+          "start": "2026-01-12T18:00:00Z",
+          "end": "2026-01-12T21:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 28800,
+        "presence_seconds": 25200,
+        "observed_seconds": 28800,
+        "state_seconds": {
+          "ACTIVE": 25200,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 0,
+          "SUSPENDED": 3600,
+          "UNKNOWN": 0,
+          "PAUSED": 0
+        },
+        "presence_pct": 87.5,
+        "coverage_pct": 100.0,
+        "recent_interaction_pct": 100.0,
+        "daily_progress_pct": 87.5,
+        "provisional": false,
+        "app_seconds": {
+          "terminal": 25200
+        },
+        "tab_seconds": {},
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "crash-gap",
+      "description": "Seção 4.6: 14–15h não recebe app; suspensão exige confirmação.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T21:00:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T15:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T16:00:00Z",
+          "end": "2026-01-12T17:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T17:00:00Z",
+          "end": "2026-01-12T18:00:00Z",
+          "state": "UNKNOWN",
+          "app": null,
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-gap",
+          "quality": "unknown",
+          "reason": "crash"
+        },
+        {
+          "start": "2026-01-12T18:00:00Z",
+          "end": "2026-01-12T21:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 28800,
+        "presence_seconds": 25200,
+        "observed_seconds": 25200,
+        "state_seconds": {
+          "ACTIVE": 25200,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 3600,
+          "PAUSED": 0
+        },
+        "presence_pct": 87.5,
+        "coverage_pct": 87.5,
+        "recent_interaction_pct": 100.0,
+        "daily_progress_pct": 87.5,
+        "provisional": false,
+        "app_seconds": {
+          "terminal": 25200
+        },
+        "tab_seconds": {},
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "ambiguous-profiles",
+      "description": "Seção 4.6: dois perfis ambíguos conservam app e aba desconhecida.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T12:20:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T12:20:00Z",
+          "state": "ACTIVE",
+          "app": "browser",
+          "tab": "unknown",
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "ambiguous-browser"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 1200,
+        "presence_seconds": 1200,
+        "observed_seconds": 1200,
+        "state_seconds": {
+          "ACTIVE": 1200,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 0,
+          "PAUSED": 0
+        },
+        "presence_pct": 100.0,
+        "coverage_pct": 100.0,
+        "recent_interaction_pct": 100.0,
+        "daily_progress_pct": 4.166666666666667,
+        "provisional": true,
+        "app_seconds": {
+          "browser": 1200
+        },
+        "tab_seconds": {
+          "unknown": 1200
+        },
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "outside-workday",
+      "description": "Seção 4.6: 18–19h separado, não compensa jornada.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": true
+      },
+      "as_of": "2026-01-12T22:00:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T15:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T16:00:00Z",
+          "end": "2026-01-12T22:00:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 28800,
+        "presence_seconds": 28800,
+        "observed_seconds": 28800,
+        "state_seconds": {
+          "ACTIVE": 28800,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 0,
+          "PAUSED": 0
+        },
+        "presence_pct": 100.0,
+        "coverage_pct": 100.0,
+        "recent_interaction_pct": 100.0,
+        "daily_progress_pct": 100.0,
+        "provisional": false,
+        "app_seconds": {
+          "terminal": 28800
+        },
+        "tab_seconds": {},
+        "external_seconds": 3600
+      }
+    },
+    {
+      "id": "zero-denominator",
+      "description": "Antes das 09h E=P=O=0; presença/cobertura/interação N/A.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T11:59:00Z",
+      "intervals": [],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 0,
+        "presence_seconds": 0,
+        "observed_seconds": 0,
+        "state_seconds": {
+          "ACTIVE": 0,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 0,
+          "PAUSED": 0
+        },
+        "presence_pct": null,
+        "coverage_pct": null,
+        "recent_interaction_pct": null,
+        "daily_progress_pct": 0.0,
+        "provisional": true,
+        "app_seconds": {},
+        "tab_seconds": {},
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "explicit-pause",
+      "description": "Pausa de coleta não é presença nem estado observado.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T12:05:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T12:05:00Z",
+          "state": "PAUSED",
+          "app": null,
+          "tab": null,
+          "hostname": null,
+          "source": "manual",
+          "quality": "observed",
+          "reason": "explicit-pause"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 300,
+        "presence_seconds": 0,
+        "observed_seconds": 0,
+        "state_seconds": {
+          "ACTIVE": 0,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 0,
+          "PAUSED": 300
+        },
+        "presence_pct": 0.0,
+        "coverage_pct": 0.0,
+        "recent_interaction_pct": null,
+        "daily_progress_pct": 0.0,
+        "provisional": true,
+        "app_seconds": {},
+        "tab_seconds": {},
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "reboot-gap",
+      "description": "Fronteira confirmada encerra app; gap UNKNOWN sem reconstrução.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T12:10:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T12:05:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T12:05:00Z",
+          "end": "2026-01-12T12:10:00Z",
+          "state": "UNKNOWN",
+          "app": null,
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-gap",
+          "quality": "unknown",
+          "reason": "boot-change"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 600,
+        "presence_seconds": 300,
+        "observed_seconds": 300,
+        "state_seconds": {
+          "ACTIVE": 300,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 300,
+          "PAUSED": 0
+        },
+        "presence_pct": 50.0,
+        "coverage_pct": 50.0,
+        "recent_interaction_pct": 100.0,
+        "daily_progress_pct": 1.0416666666666667,
+        "provisional": true,
+        "app_seconds": {
+          "terminal": 300
+        },
+        "tab_seconds": {},
+        "external_seconds": 0
+      }
+    },
+    {
+      "id": "wall-clock-gap",
+      "description": "Fronteira confirmada encerra app; gap UNKNOWN sem reconstrução.",
+      "requirements": [
+        "RF-01",
+        "RF-05",
+        "RF-07",
+        "RNF-10"
+      ],
+      "policy": {
+        "version": 1,
+        "timezone": "America/Sao_Paulo",
+        "date": "2026-01-12",
+        "start": "09:00",
+        "end": "18:00",
+        "lunch_start": "12:00",
+        "lunch_end": "13:00",
+        "active_threshold_seconds": 60,
+        "idle_threshold_seconds": 300,
+        "collect_outside_workday": false
+      },
+      "as_of": "2026-01-12T12:10:00Z",
+      "intervals": [
+        {
+          "start": "2026-01-12T12:00:00Z",
+          "end": "2026-01-12T12:05:00Z",
+          "state": "ACTIVE",
+          "app": "terminal",
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-x11",
+          "quality": "observed",
+          "reason": "valid"
+        },
+        {
+          "start": "2026-01-12T12:05:00Z",
+          "end": "2026-01-12T12:10:00Z",
+          "state": "UNKNOWN",
+          "app": null,
+          "tab": null,
+          "hostname": null,
+          "source": "synthetic-gap",
+          "quality": "unknown",
+          "reason": "clock-discontinuity"
+        }
+      ],
+      "annotations": [],
+      "expected": {
+        "daily_seconds": 28800,
+        "elapsed_seconds": 600,
+        "presence_seconds": 300,
+        "observed_seconds": 300,
+        "state_seconds": {
+          "ACTIVE": 300,
+          "LOW_ACTIVITY": 0,
+          "IDLE": 0,
+          "LOCKED": 0,
+          "SUSPENDED": 0,
+          "UNKNOWN": 300,
+          "PAUSED": 0
+        },
+        "presence_pct": 50.0,
+        "coverage_pct": 50.0,
+        "recent_interaction_pct": 100.0,
+        "daily_progress_pct": 1.0416666666666667,
+        "provisional": true,
+        "app_seconds": {
+          "terminal": 300
+        },
+        "tab_seconds": {},
+        "external_seconds": 0
+      }
+    }
+  ]
+}

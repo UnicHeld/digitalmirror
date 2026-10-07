@@ -1,0 +1,39 @@
+# Usado exclusivamente por scripts/compose-desktop após validar a sessão local.
+services:
+  desktop:
+    # Cookies Xauthority FamilyLocal podem estar associados ao hostname da sessão.
+    hostname: "${DIGITALMIRROR_HOSTNAME:?Hostname local fornecido pelo launcher}"
+    environment:
+      DISPLAY: "${DISPLAY:?Execute a partir do terminal da sessão X11}"
+      XDG_SESSION_TYPE: "${XDG_SESSION_TYPE:?Sessão X11 obrigatória}"
+      XDG_SESSION_ID: "${XDG_SESSION_ID:?Identificação da sessão obrigatória}"
+      XDG_CURRENT_DESKTOP: "${XDG_CURRENT_DESKTOP:-}"
+      XDG_RUNTIME_DIR: /run/host/user
+      DBUS_SESSION_BUS_ADDRESS: unix:path=/run/host/user/bus
+      DBUS_SYSTEM_BUS_ADDRESS: unix:path=/run/host/system-bus
+      XAUTHORITY: /run/host/Xauthority
+    volumes:
+      - type: bind
+        source: /tmp/.X11-unix
+        target: /tmp/.X11-unix
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${XAUTHORITY:?Xauthority da sessão obrigatório}"
+        target: /run/host/Xauthority
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${XDG_RUNTIME_DIR:?Runtime dir da sessão obrigatório}/bus"
+        target: /run/host/user/bus
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /run/dbus/system_bus_socket
+        target: /run/host/system-bus
+        read_only: true
+        bind:
+          create_host_path: false

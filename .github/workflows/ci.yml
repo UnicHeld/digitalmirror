@@ -1,0 +1,24 @@
+name: Contratos e spike
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.13"]
+    env:
+      DIGITALMIRROR_PYTHON_VERSION: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh scripts/compose config --quiet
+      - run: sh scripts/compose build dev desktop
+      # Mesmo fluxo local: testes por descoberta e build sem rede no contêiner.
+      - run: sh scripts/compose run --rm dev
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-python-${{ matrix.python-version }}
+          path: dist/*
