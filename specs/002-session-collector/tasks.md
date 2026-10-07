@@ -15,6 +15,7 @@
 - [x] US-02.2/03: implementar resolução validada da sessão e UID real no Compose (ADR-010).
 - [x] US-02.2: implementar contagens de lock durante watcher e revalidação após par de retomada/fim.
 - [x] US-02.2 / RNF-09: testar validação de identidade, falhas, divergências e recuperação sanitizadas via Compose.
+- [ ] US-02.2: investigar session-identity-mismatch do primeiro doctor real ADR-010, com motivos/proveniência sanitizados antes de corrigir associação.
 - [ ] US-02.3: polling com fontes gráficas saudáveis e precisão de transição medida.
 - [ ] US-02.3: confirmar ambiente gráfico e início único após login/logout reais.
 - [ ] US-02.4: prova real com duas janelas/perfis e metadados da extensão.
@@ -48,4 +49,7 @@ pares de retomada/fim. 53 testes, formatter, lint, mypy e build via Compose pass
 Imagens dev/runtime reconstruídas; runtime com D-Bus de sistema e sem sessão
 gráfica produz resumo/post_watch_checks degradados honestos. Candidato real com
 DISPLAY sintético incorreto rejeitado. Formato JSON busctl validado no barramento
-real, sem emitir identidade. Ensaios gráficos da etapa 1 ainda não executados.
+real, sem emitir identidade. Primeiro doctor real da etapa 1 recebido: dez fontes
+read-ok, GNOME=false e logind-lock=session-identity-mismatch; atributo divergente
+ainda desconhecido. Comparação de lock/retomada da versão nova ainda não testada.
+Retomar da investigação descrita no handoff, sem iniciar EP-03.

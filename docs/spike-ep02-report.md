@@ -390,3 +390,37 @@ corrigidas; checks repetidos com sucesso. Nenhuma nova dependência de produçã
 Evidências gráficas anteriores permanecem históricas; ainda aguardamos executar
 a versão ADR-010 no terminal do usuário. Não afirmar 11 fontes disponíveis,
 confiabilidade GetActive/LockedHint, recursos RNF ou C0 com base nos testes sintéticos.
+
+## Primeiro resultado real do ADR-010 — encerramento da sessão de 06/10/2026
+
+O usuário executou `sh scripts/compose-desktop run --rm desktop` no terminal real.
+Observação às 02:16:59 UTC de 07/10/2026 (23:16:59 local de 06/10), após publicação
+do commit `086e553`. Evidência fornecida pelo usuário, sem JSON bruto versionado.
+
+Dez de onze fontes read-ok: foco/classe/PID/workspace/geometria/idle X11, XRandR
+com dois monitores (um principal, janela atribuída), GNOME GetActive=false,
+introspecção PrepareForSleep e alvo gráfico. LockedHint **não consultado como
+sessão validada**: logind-lock=unavailable, reason=session-identity-mismatch,
+session_validated=false e resolved_from_user_display=false. Diagnóstico degraded.
+
+Avaliação: fontes previamente disponíveis seguem funcionando; resolução não
+atingiu aceite. O código rejeitou o candidato por ao menos uma diferença entre
+Id/UID/Type/Class/Remote/Display. O motivo agregado não informa qual atributo.
+O campo resolved_from_user_display=false em falha não prova uso de ID explícito,
+pois falhas de qualquer caminho retornam o valor padrão. Não atribuir causa sem
+instrumentação adicional; não afrouxar validação para transformar saída em available.
+
+Uma amostra: janela 0,224802s, latência p95 0,224669s, atraso 0,000066s, CPU própria
+0,012735s e de filhos 0,052519s; 29,028% de um núcleo nessa janela curta, sem espera
+de polling. RSS próprio e maior filho 19.364 KiB cada. Não comparar esse percentual
+com polling de 12 amostras nem RNF de 8h. Sem watcher, não testa comparação de
+lock, revalidação na retomada ou post_watch_checks da implementação nova.
+
+Implementação ADR-010 teve [CI via Compose](https://github.com/UnicHeld/digitalmirror/actions/runs/37560776472)
+aprovada em Python 3.11 e 3.13; 53 testes/checks/build passaram localmente.
+O usuário encerra esta sessão e retorna no dia seguinte. Esta atualização somente
+registra a evidência e a retomada; nenhuma correção de código ou novo ensaio gráfico.
+Primeiro passo ao retomar: motivos de divergência e proveniência sanitizados,
+regressões, investigação da associação real e repetição do doctor; depois watchers
+de lock/retomada e etapas de foco/perfis/login/logout. Handoff em docs/cli-handoff.md.
+EP-02 In Progress, US-02.2 parcial, C0 pendente e EP-03 Backlog.

@@ -67,8 +67,10 @@ gerou JSON após retorno. Fontes após retomada e comparação de lock ainda pre
 ser verificadas. US-02.2 parcial; US-02.3/04 e C0 continuam pendentes.
 ADR-010 implementa resolução validada por ID explícito/User.Display do UID real,
 consultas de lock durante watcher e revalidação após pares de retomada/fim.
-53 testes/checks/build via Compose passaram localmente; versão nova ainda exige
-ensaios gráficos de comparação e retomada. Não encerra US-02.2/03/04 nem C0.
+53 testes/checks/build via Compose passaram localmente e CI Python 3.11/3.13 passou.
+Primeiro doctor real da versão nova: dez fontes read-ok, logind-lock indisponível
+por session-identity-mismatch. Atributo divergente desconhecido; investigar com
+diagnóstico sanitizado antes dos watchers novos. Não encerra US-02.2/03/04 nem C0.
 
 **Aceite:** relatório de fontes disponíveis e ausentes, precisão observada e custo básico. Diagnóstico é só leitura, sem mover foco ou gerar entradas. As fontes indisponíveis têm fallback definido ou estado desconhecido. Evidência do alvo real registrada sem conteúdo pessoal.
 

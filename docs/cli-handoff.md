@@ -1,5 +1,62 @@
 # Continuar a implementação pela CLI
 
+## Retomada da próxima sessão — parada em 06/10/2026, 23:17 local
+
+**Começar aqui, sem reiniciar EP-01.** Implementação atual na main: `086e553`
+(ADR-010, resolução validada e consultas durante/ao fim do watcher).
+[CI dessa implementação](https://github.com/UnicHeld/digitalmirror/actions/runs/37560776472)
+passou em Python 3.11/3.13 via Compose; 53 testes passaram localmente.
+EP-01 Done; EP-02 In Progress; EP-03 Backlog; C0 pendente.
+
+Último resultado informado pelo usuário: doctor simples executado no terminal
+GNOME/X11 às 02:16:59 UTC de 07/10/2026 (23:16:59 local de 06/10). **Dez fontes
+disponíveis**, incluindo GNOME GetActive=false e dois monitores; logind-lock
+indisponível por **session-identity-mismatch**. session_validated=false.
+Isso confirma execução da versão nova e rejeição do candidato, sem validar LockedHint.
+Não há watcher/post_watch_checks nessa saída. Apenas uma amostra: os 29,028% de
+CPU em 224,802ms não representam polling contínuo. Resumo no relatório; sem JSON bruto.
+
+O motivo atual não identifica qual comparação falhou: Id, UID, Type, Class,
+Remote ou Display. resolved_from_user_display=false também não identifica o
+caminho tentado quando há erro: SessionResolution retorna esse campo como false
+em qualquer falha. Não concluir que o usuário recebeu um XDG_SESSION_ID explícito,
+que DISPLAY é a causa, ou que existe uma sessão alheia, sem evidência adicional.
+
+Próximos passos, nesta ordem:
+
+1. Ler AGENTS.md, README, documentos de produto/design, spec/plan/tasks 002,
+   ADR-010 e `src/digitalmirror/session.py`; conferir Git e preservar alterações.
+2. Instrumentar motivos por comparação e proveniência do candidato em formato
+   sanitizado (booleans/enums), sem imprimir ID/UID/DISPLAY/paths nem valores brutos.
+   Adicionar regressões relevantes. Consultas e testes sempre dentro de Compose.
+3. Analisar resultado no terminal real, conferir UID real versus UID rootless e
+   propriedades de identidade. Corrigir somente o que a evidência justificar;
+   não afrouxar validação, escolher outra sessão, fixar ID ou recuperar ambiente
+   de processos. Mudança de critério exige ADR/spec antes do código.
+4. Reconstruir imagens, executar checks e repetir doctor simples. Após associação
+   válida (ou decisão explícita de fallback GNOME com evidência), executar watchers
+   separados: bloqueio de 120s com ≥15s bloqueado e ≥15s desbloqueado; suspensão
+   de 180s com retomada. Conferir source_state_counts/comparison_counts,
+   resume_revalidation e post_watch_checks. Usuário executa todas as ações.
+5. Fechada a etapa 1, seguir precisão de foco/monitores, prova de dois perfis com
+   extensão mínima, protótipo de login/logout/instância única e decisões finais C0.
+   CPU curta de 1,137% > meta de 1% permanece registrada; soak de 8h é EP-09.
+
+O usuário encerrou os ensaios desta sessão e pediu somente registro/publicação.
+Não executar novos ensaios gráficos ou implementar a instrumentação acima agora.
+Na próxima sessão, retomar da investigação de session-identity-mismatch.
+Commit/push e atualização de Project foram autorizados nesta sessão; confirmar
+Git e estado remoto ao retomar. Não fechar issue #2 ou mover EP-02 para Done ainda.
+
+Prompt para retomar:
+
+> Leia AGENTS.md e a seção de retomada de docs/cli-handoff.md. Continue o EP-02
+> a partir do commit 086e553: o doctor real retornou session-identity-mismatch.
+> Primeiro instrumente motivos sanitizados por atributo e investigue a associação
+> da sessão, preservando UID real/rootless e validação do DISPLAY. Execute testes
+> via Docker Compose e prepare os ensaios de lock/retomada antes de avançar às
+> etapas de foco, perfis e login/logout. Não iniciar EP-03 com C0 pendente.
+
 ## Estado inicial
 
 Na publicação inicial, o repositório público, o Project privado e os 12 épicos continham somente planejamento, com 48 histórias em checklists. A lista de todas as abas/apps abertas e o tempo apenas em segundo plano não foi adicionada ao escopo: o contrato mede foco e interação recente.
@@ -75,18 +132,25 @@ consulta estados de lock a cada 5s e revalida fontes após pares de retomada e n
 Novos campos JSON v1: event_watch.state_observation e post_watch_checks/status.
 Falhas intermediárias persistem no diagnóstico. Formatter, lint, mypy, 53 testes
 e build passaram via Compose; imagens reconstruídas. Nenhuma nova dependência.
-Próximo ensaio: doctor simples para validar resolução e depois watchers separados
+Primeiro ensaio da versão nova recebido: session-identity-mismatch; investigar
+conforme a seção de retomada. Depois, doctor simples para validar resolução e watchers separados
 de bloqueio (manter bloqueado/desbloqueado por ≥15s) e suspensão/retomada. Conferir
 contagens true/false, comparação de fontes, resume_revalidation e post_watch_checks.
 Não declarar etapa 1 concluída ou C0 antes de analisar essas evidências gráficas.
 
 ## Primeiro trabalho
 
-Leia `AGENTS.md`, `docs/product-spec.md` e `docs/system-design.md`. Comece pela issue #1 (EP-01), detalhando contratos, fixtures e estrutura mínima. Em seguida faça a issue #2 (EP-02) no Debian 12/GNOME/X11 real. Registre disponibilidade e custo das fontes antes de implementar coleta contínua.
+Leia `AGENTS.md`, `docs/product-spec.md` e `docs/system-design.md`. EP-01 já está
+concluído; continue o EP-02 pela seção de retomada acima. Preserve a evidência
+histórica e resolva as pendências reais antes de implementar coleta contínua.
 
 ## Prompt sugerido para o agente na CLI
 
-> Leia AGENTS.md, docs/product-spec.md, docs/system-design.md, docs/backlog.md e specs/README.md. Trabalhe primeiro no EP-01 (#1) e no spike EP-02 (#2). Crie a spec, o plan e o tasks da fatia antes de implementar. Preserve a observação passiva, a jornada 09–18 com 1h de almoço, foco global de apps/abas, cobertura e lacunas explícitas. Use fixtures sintéticas. Verifique no meu Debian 12/GNOME/X11 janela ativa, idle, bloqueio, monitores, suspensão e integração do autostart. Documente fontes indisponíveis e decisões antes de seguir ao EP-03. Não implemente todos os épicos de uma vez.
+> Leia AGENTS.md, docs/cli-handoff.md, docs/product-spec.md, docs/system-design.md,
+> docs/backlog.md e specs/README.md. EP-01 está concluído; continue o spike EP-02
+> da pendência session-identity-mismatch registrada no handoff. Atualize spec,
+> plan, tasks e ADR antes de mudar critérios. Preserve coleta passiva e privacidade,
+> valide pelo Docker/Compose com evidências reais e não avance ao EP-03 com C0 pendente.
 
 Execute toda ferramenta Python, checks e diagnóstico dentro das imagens via os
 launchers Compose. A sessão real permanece no host; não substituí-la por Xvfb,
