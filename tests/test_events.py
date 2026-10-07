@@ -98,7 +98,7 @@ class EventCycleIntegrationTests(unittest.TestCase):
             patch("digitalmirror.events.subprocess.Popen", side_effect=spawn),
             patch("digitalmirror.events.shutil.which", return_value="/synthetic/bin"),
         ):
-            report = watch_events(1, ["gnome-lock", "logind-sleep-interface"])
+            report = watch_events(1, ["gnome-lock", "logind-sleep-interface"], env={})
         sources = report["sources"]
         self.assertEqual(sources["gnome-lock"]["cycle_status"], "complete")
         self.assertEqual(sources["gnome-lock"]["cycles"]["complete_count"], 1)
@@ -131,6 +131,8 @@ class EventCycleIntegrationTests(unittest.TestCase):
         with (
             patch("digitalmirror.events.subprocess.Popen", side_effect=spawn),
             patch("digitalmirror.events.shutil.which", return_value="/synthetic/bin"),
+            patch.dict("os.environ", {}, clear=True),
+            patch("digitalmirror.cli.collect_checks", return_value=[]),
             patch(
                 "digitalmirror.cli.diagnose",
                 return_value={

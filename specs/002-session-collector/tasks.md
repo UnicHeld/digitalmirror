@@ -12,6 +12,9 @@
 - [x] US-02.2: registrar entrega real de dois ciclos GNOME no watcher de 120s durante ensaio manual Windows+L, sem inferir quantidade de bloqueios efetivos.
 - [x] US-02.2: suspensão/retomada voluntárias no GNOME com um par PrepareForSleep ordenado e saída final após retorno, informados pelo usuário.
 - [ ] US-02.2: correlacionar ações/ciclos de bloqueio, comparar GetActive/LockedHint da sessão e revalidar fontes após retomada.
+- [x] US-02.2/03: implementar resolução validada da sessão e UID real no Compose (ADR-010).
+- [x] US-02.2: implementar contagens de lock durante watcher e revalidação após par de retomada/fim.
+- [x] US-02.2 / RNF-09: testar validação de identidade, falhas, divergências e recuperação sanitizadas via Compose.
 - [ ] US-02.3: polling com fontes gráficas saudáveis e precisão de transição medida.
 - [ ] US-02.3: confirmar ambiente gráfico e início único após login/logout reais.
 - [ ] US-02.4: prova real com duas janelas/perfis e metadados da extensão.
@@ -38,3 +41,11 @@ pendente, sem comparação LockedHint/GetActive bloqueado. Ensaio posterior de
 sem duplicatas/bordas pendentes; fontes X11/GetActive após retorno não revalidadas.
 RNF-03 não atendida na janela curta de
 polling (1,137% > 1%); estabilidade de 8h, foco, perfis, autostart e C0 pendentes.
+
+Etapa 1 implementada conforme ADR-010: User.Display ou ID explícito validados,
+host UID preservado no mapeamento rootless, contagens de lock e revalidações após
+pares de retomada/fim. 53 testes, formatter, lint, mypy e build via Compose passaram.
+Imagens dev/runtime reconstruídas; runtime com D-Bus de sistema e sem sessão
+gráfica produz resumo/post_watch_checks degradados honestos. Candidato real com
+DISPLAY sintético incorreto rejeitado. Formato JSON busctl validado no barramento
+real, sem emitir identidade. Ensaios gráficos da etapa 1 ainda não executados.

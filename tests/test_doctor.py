@@ -27,6 +27,7 @@ X11_ENV = {
     "DBUS_SESSION_BUS_ADDRESS": "synthetic-bus",
     "XDG_RUNTIME_DIR": "/synthetic/runtime",
     "XDG_SESSION_ID": "s1",
+    "DIGITALMIRROR_HOST_UID": "1001",
 }
 MONITORS = (
     "Monitors: 2\n"
@@ -50,7 +51,30 @@ def healthy_runner(argv):
     if argv[0] == "xrandr":
         return CommandResult(MONITORS)
     if argv[0] == "busctl":
-        return CommandResult("b false")
+        if "call" in argv:
+            path = (
+                "/org/freedesktop/login1/user/_1001"
+                if "GetUser" in argv
+                else "/org/freedesktop/login1/session/s1"
+            )
+            return CommandResult(json.dumps({"type": "o", "data": [path]}))
+        if "org.freedesktop.login1.User" in argv:
+            return CommandResult(
+                json.dumps({"type": "(so)", "data": ["s1", "/org/freedesktop/login1/session/s1"]})
+            )
+        if argv[-1] == "LockedHint":
+            return CommandResult(json.dumps({"type": "b", "data": False}))
+        values = [
+            ("s", "s1"),
+            ("(uo)", [1001, "/org/freedesktop/login1/user/_1001"]),
+            ("s", "x11"),
+            ("s", "user"),
+            ("b", False),
+            ("s", ":99"),
+        ]
+        return CommandResult(
+            "\n".join(json.dumps({"type": kind, "data": value}) for kind, value in values)
+        )
     if "introspect" in argv:
         return CommandResult("PrepareForSleep(b start);")
     if "org.freedesktop.login1.Manager.GetSession" in argv:
@@ -120,9 +144,13 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(checks[0].reason, "x11-session-not-confirmed")
         self.assertEqual(next(c for c in checks if c.source == "logind-lock").status, "unavailable")
 
-    def test_missing_session_id_keeps_other_sources_without_selecting_another_session(self):
+    def test_missing_session_id_and_host_uid_keep_other_sources_without_guessing(self):
         calls = []
-        environment = {key: value for key, value in X11_ENV.items() if key != "XDG_SESSION_ID"}
+        environment = {
+            key: value
+            for key, value in X11_ENV.items()
+            if key not in {"XDG_SESSION_ID", "DIGITALMIRROR_HOST_UID"}
+        }
 
         def runner(argv):
             calls.append(argv)
@@ -315,7 +343,7 @@ class EventTests(unittest.TestCase):
             patch("digitalmirror.events.subprocess.Popen", side_effect=spawn),
             patch("digitalmirror.events.shutil.which", return_value="/synthetic/bin"),
         ):
-            report = watch_events(1, ["gnome-lock"])
+            report = watch_events(1, ["gnome-lock"], env={})
         source = report["sources"]["gnome-lock"]
         self.assertEqual(source["status"], "observed")
         self.assertEqual(source["true_count"], 1)

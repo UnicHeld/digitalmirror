@@ -15,6 +15,8 @@ from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 
+from digitalmirror.session import BUSCTL, SERVICE, SESSION_INTERFACE, json_value, resolve_session
+
 TIMEOUT_SECONDS = 2.0
 OUTPUT_LIMIT = 65536
 
@@ -222,6 +224,81 @@ def _graphical_target_check(runner: Runner) -> Check:
     )
 
 
+def read_lock_checks(env: Mapping[str, str], runner: Runner = run_readonly) -> list[Check]:
+    checks = []
+    if env.get("DBUS_SESSION_BUS_ADDRESS"):
+        result = runner(
+            [
+                "gdbus",
+                "call",
+                "--session",
+                "--dest",
+                "org.gnome.ScreenSaver",
+                "--object-path",
+                "/org/gnome/ScreenSaver",
+                "--method",
+                "org.gnome.ScreenSaver.GetActive",
+            ]
+        )
+        active = None
+        reason = result.reason
+        if not reason:
+            try:
+                active = parse_boolean(result.output)
+            except ValueError:
+                reason = "invalid-response"
+        checks.append(
+            Check(
+                "gnome-lock",
+                "unavailable" if reason else "available",
+                reason or "read-ok",
+                "LockedHint da sessão validada; senão UNKNOWN",
+                {"active": active} if active is not None else None,
+            )
+        )
+    else:
+        checks.append(
+            Check(
+                "gnome-lock",
+                "unavailable",
+                "missing-session-bus",
+                "LockedHint da sessão validada; senão UNKNOWN",
+            )
+        )
+    session = resolve_session(env, runner)
+    active = None
+    reason = session.reason
+    if session.path:
+        result = runner(
+            BUSCTL + ["get-property", SERVICE, session.path, SESSION_INTERFACE, "LockedHint"]
+        )
+        reason = result.reason
+        if not reason:
+            try:
+                value = json_value(result.output, "b")
+                if type(value) is not bool:
+                    raise ValueError("invalid-response")
+                active = value
+            except (ValueError, TypeError):
+                reason = "invalid-response"
+    details: dict[str, bool | int] = {
+        "session_validated": session.path is not None,
+        "resolved_from_user_display": session.from_user_display,
+    }
+    if active is not None:
+        details["active"] = active
+    checks.append(
+        Check(
+            "logind-lock",
+            "unavailable" if reason else "available",
+            reason or "read-ok",
+            "GNOME validado; senão UNKNOWN",
+            details,
+        )
+    )
+    return checks
+
+
 def collect_checks(env: Mapping[str, str], runner: Runner = run_readonly) -> list[Check]:
     checks: list[Check] = []
     x11 = env.get("XDG_SESSION_TYPE") == "x11" and bool(env.get("DISPLAY"))
@@ -331,95 +408,7 @@ def collect_checks(env: Mapping[str, str], runner: Runner = run_readonly) -> lis
         )
 
     session_bus = bool(env.get("DBUS_SESSION_BUS_ADDRESS"))
-    if session_bus:
-        checks.append(
-            _read_check(
-                runner,
-                "gnome-lock",
-                [
-                    "gdbus",
-                    "call",
-                    "--session",
-                    "--dest",
-                    "org.gnome.ScreenSaver",
-                    "--object-path",
-                    "/org/gnome/ScreenSaver",
-                    "--method",
-                    "org.gnome.ScreenSaver.GetActive",
-                ],
-                parse_boolean,
-                "LockedHint da sessão validada; senão UNKNOWN",
-            )
-        )
-    else:
-        checks.append(
-            Check(
-                "gnome-lock",
-                "unavailable",
-                "missing-session-bus",
-                "LockedHint da sessão validada; senão UNKNOWN",
-            )
-        )
-    session_id = env.get("XDG_SESSION_ID", "")
-    # Só consultar a sessão X11 explicitamente herdada, não a sessão da CLI/SSH.
-    if x11 and re.fullmatch(r"[a-zA-Z0-9_-]{1,64}", session_id):
-        result = runner(
-            [
-                "gdbus",
-                "call",
-                "--system",
-                "--dest",
-                "org.freedesktop.login1",
-                "--object-path",
-                "/org/freedesktop/login1",
-                "--method",
-                "org.freedesktop.login1.Manager.GetSession",
-                session_id,
-            ]
-        )
-        match = (
-            re.fullmatch(
-                r"\(objectpath '(/org/freedesktop/login1/session/[a-zA-Z0-9_]+)',\)", result.output
-            )
-            if not result.reason
-            else None
-        )
-        if match:
-            checks.append(
-                _read_check(
-                    runner,
-                    "logind-lock",
-                    [
-                        "busctl",
-                        "--system",
-                        "get-property",
-                        "org.freedesktop.login1",
-                        match[1],
-                        "org.freedesktop.login1.Session",
-                        "LockedHint",
-                    ],
-                    parse_boolean,
-                    "GNOME validado; senão UNKNOWN",
-                )
-            )
-        else:
-            checks.append(
-                Check(
-                    "logind-lock",
-                    "unavailable",
-                    result.reason or "invalid-response",
-                    "GNOME validado; senão UNKNOWN",
-                )
-            )
-    else:
-        checks.append(
-            Check(
-                "logind-lock",
-                "unavailable",
-                "missing-graphical-session-id",
-                "GNOME validado; senão UNKNOWN",
-            )
-        )
+    checks.extend(read_lock_checks(env, runner))
     checks.append(
         _read_check(
             runner,

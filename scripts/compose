@@ -4,6 +4,7 @@ set -eu
 # Usar sempre IDs do usuário que chamou Compose, sem arquivos pessoais versionados.
 export DIGITALMIRROR_UID="$(id -u)"
 export DIGITALMIRROR_GID="$(id -g)"
+export DIGITALMIRROR_HOST_UID="$DIGITALMIRROR_UID"
 digitalmirror_security=$(docker info --format '{{json .SecurityOptions}}')
 case "$digitalmirror_security" in
     *'name=rootless'*)

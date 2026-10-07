@@ -28,9 +28,12 @@ Given erro, timeout ou resposta inválida, Then motivo normalizado, sem stderr p
 Given fonte presente, Then testar leitura efetiva, sem confundir binário com fonte saudável.
 Given logind acessível sem sessão gráfica identificada, Then não usar LockedHint de outra sessão.
 Given terminal GNOME/X11 sem XDG_SESSION_ID, Then o launcher continua após validar
-cookie/sockets e Docker local; GNOME/X11 são consultados, logind-lock fica
-indisponível com missing-graphical-session-id e o doctor retorna diagnóstico degradado.
-O ID não é adivinhado nem recuperado do ambiente de outro processo (ADR-009).
+cookie/sockets e Docker local; GNOME/X11 são consultados e logind-lock usa
+somente candidato validado. Falha de resolução mantém diagnóstico degradado.
+Conforme ADR-010, resolver somente User.Display do UID real fornecido pelo launcher,
+validando Id/UID/Type/Class/Remote/Display antes de LockedHint. Sem associação válida,
+manter indisponível; ID explícito incorreto não gera busca de outro candidato.
+Não enumerar sessões nem recuperar ambiente de outro processo.
 
 CLI retorna JSON versionado com fontes, motivos, fallback e medições agregadas.
 `--watch-seconds` (0–900; padrão 0) observa ActiveChanged e PrepareForSleep em
@@ -46,6 +49,11 @@ Campos existentes e schema_version=1 são preservados; o resumo é uma extensão
 GetActive/ActiveChanged não é considerado prova de bloqueio sem ensaio comparativo.
 Ausência de eventos não prova fonte funcional. Nenhum comando inicia lock/sleep.
 Cada amostra revalida fontes; falhas posteriores ficam visíveis no histórico agregado.
+O watcher consulta GetActive/LockedHint a cada 5s e resume booleans/indisponíveis,
+motivos e coincidências/divergências sem história pessoal. Cada par de suspensão
+recebido provoca revalidação de todas as fontes; saída inclui resumo por fonte e
+post_watch_checks no fim. Falha recuperada preserva status degraded. As consultas
+são sequenciais e a comparação não é prova atômica de bloqueio.
 `--samples` aceita 1–720; `--interval` aceita 5–60s finitos. Timeout de comando ≤2s;
 execução sequencial pode ultrapassar o intervalo e deve reportar atraso sem simular amostras.
 Código 0: fontes essenciais e auxiliares disponíveis; 1: diagnóstico degradado;

@@ -13,3 +13,4 @@ novo registro antes da implementação; evidência incompleta permanece indicada
 - [007 — Docker/Compose obrigatório](007-docker-compose.md)
 - [008 — Ciclos ordenados de sinais no spike](008-ordered-spike-signals.md)
 - [009 — ID de sessão opcional no diagnóstico](009-optional-session-id.md)
+- [010 — Sessão validada e consultas durante o ensaio](010-session-validation-and-watch-checks.md)

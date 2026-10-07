@@ -24,7 +24,8 @@ class ComposeLauncherTests(unittest.TestCase):
             "  printf '%s\\n' \"${FAKE_SECURITY_OPTIONS:-[]}\"\n"
             "  exit 0\n"
             "fi\n"
-            'printf \'%s:%s\\n\' "$DIGITALMIRROR_UID" "$DIGITALMIRROR_GID"\n'
+            'printf \'%s:%s:%s\\n\' "$DIGITALMIRROR_UID" "$DIGITALMIRROR_GID" '
+            '"$DIGITALMIRROR_HOST_UID"\n'
             "printf '%s\\n' \"$@\"\n"
         )
         docker.chmod(0o755)
@@ -51,7 +52,7 @@ class ComposeLauncherTests(unittest.TestCase):
         self.assertEqual(
             result.stdout.splitlines(),
             [
-                "1001:1002",
+                "1001:1002:1001",
                 "compose",
                 "-f",
                 "compose.yaml",
@@ -72,7 +73,7 @@ class ComposeLauncherTests(unittest.TestCase):
             },
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.splitlines()[0], "0:0")
+        self.assertEqual(result.stdout.splitlines()[0], "0:0:1001")
 
     def test_desktop_rejects_no_session_and_wayland_before_docker(self):
         for environment in ({}, {"XDG_SESSION_TYPE": "wayland", "DISPLAY": ":99"}):

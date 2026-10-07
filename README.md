@@ -92,10 +92,13 @@ O watcher resume ciclos true → false, duplicatas e sinais sem par por fonte.
 devem confirmar bloqueio e suspensão reais. Detalhes no protocolo do spike.
 
 O launcher valida os sockets/cookie antes de montar e não adivinha credenciais.
-`XDG_SESSION_ID` é opcional: quando ausente, o diagnóstico continua e informa
-`logind-lock=unavailable` / `missing-graphical-session-id`. GNOME/X11 e sinais de
-suspensão continuam sendo consultados; não exporte um ID arbitrário para ocultar
-essa limitação. O código 1/degraded nesse caso é esperado.
+`XDG_SESSION_ID` é opcional: na ausência, o doctor consulta somente User.Display
+do UID real do host fornecido pelo launcher. Valida ID, UID, tipo X11, classe user,
+sessão local e DISPLAY antes de ler LockedHint; erro mantém a fonte indisponível.
+Não exporte um ID arbitrário. O watcher consulta estados de bloqueio a cada 5s,
+resume coincidências/divergências e revalida fontes após pares de retomada e no
+fim (`post_watch_checks`). Essas leituras ficam fora das medições iniciais de CPU.
+Ensaios manuais continuam necessários; detalhes no ADR-010 e no protocolo.
 O serviço desktop usa imagem somente leitura, tmpfs e capabilities removidas.
 Em rootless, UID 0 interno corresponde ao usuário sem privilégios do host.
 Não configura autostart, bloqueia/suspende o computador nem altera foco. Saída JSON

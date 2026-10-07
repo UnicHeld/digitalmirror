@@ -350,3 +350,43 @@ US-02.2: ação manual de suspensão/retomada e entrega do par observadas; corre
 dos dois ciclos Windows+L anteriores, comparação LockedHint/GetActive e
 revalidação das fontes após retomada continuam pendentes. US-02.3/04, precisão
 de foco, autostart, perfis, RNF de 8h e C0 não encerrados por esse ensaio.
+
+## Implementação da etapa 1 — sessão validada e revalidação (ADR-010)
+
+O doctor agora valida sessão explícita ou User.Display do UID real do host antes
+de LockedHint. Verifica Id/UID/tipo/classe/localidade/DISPLAY por JSON tipado do
+busctl. Não enumera sessões, lê ambiente de processos ou reutiliza candidato após
+falha. Launcher preserva UID do host antes de mapeá-lo para 0 no namespace rootless.
+
+Watcher recebe consultas GetActive/LockedHint a cada 5s, contagens de estados e
+comparações sequenciais. Cada par PrepareForSleep true → false provoca consultas
+novas a todas as fontes; há também post_watch_checks no fim. Falhas de monitor,
+consulta de estado ou revalidação mantêm degraded mesmo após recuperação. Custos
+dessas consultas não entram nas medições de polling anteriores ao watcher.
+
+Validações locais executadas via Compose/Python 3.11:
+
+- Formatter Ruff, lint, mypy estrito, **53 testes** e build sdist/wheel passaram.
+- Treze novos testes cobrem identidade/proveniência, candidato incorreto, tipos
+  inválidos, falha sem fallback, estados divergentes/indisponíveis, recuperação,
+  revalidação somente por par ordenado e falha final com retorno 1.
+- Imagens dev/runtime reconstruídas; sintaxe shell e git diff --check passaram.
+- Configuração desktop com variáveis sintéticas e ID vazio válida; UID real do
+  host preservado junto de 0:0 interno, mounts read-only/capabilities removidas,
+  nenhuma porta publicada. Config sem variáveis gráficas recusou interpolação;
+  repetida com fixture sintética, sem criar sessão ou usar credenciais de terceiros.
+- JSON busctl de GetUser/User.Display e propriedades selecionadas lido no D-Bus
+  real dentro do runtime; somente formas/tipos inspecionados, sem publicar dados.
+- Resolver no runtime com UID real e DISPLAY sintético incorreto rejeitou candidato
+  com session-identity-mismatch; não consultou LockedHint como sessão validada.
+- Runtime somente com D-Bus de sistema: watcher de 2s conectado ao logind, zero
+  sinais/ciclos; estados de lock indisponíveis e post_watch_status=degraded, fonte
+  PrepareForSleep consultável após watcher. Não confirma suspensão ou sessão gráfica.
+- Launcher real do agente continua recusando ausência de GNOME/X11 com código 2.
+
+Falhas iniciais de import/linha longa e captura de variáveis de teste no lint,
+invariância de dict na tipagem e iteração de chaves no teste de privacidade foram
+corrigidas; checks repetidos com sucesso. Nenhuma nova dependência de produção.
+Evidências gráficas anteriores permanecem históricas; ainda aguardamos executar
+a versão ADR-010 no terminal do usuário. Não afirmar 11 fontes disponíveis,
+confiabilidade GetActive/LockedHint, recursos RNF ou C0 com base nos testes sintéticos.

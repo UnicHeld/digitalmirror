@@ -5,8 +5,9 @@
    descartada após parse. Locale C para parsers; nenhum comando de mutação.
 3. Diagnosticar X11 por xprop, xdotool somente `getwindowgeometry`, xrandr
    somente `--listactivemonitors`, idle por xprintidle; nunca solicitar título.
-4. GNOME via GetActive, logind via propriedades da sessão explicitamente presente
-   no ambiente e introspecção do Manager. Não assumir que LockedHint é confiável
+4. GNOME via GetActive, logind via sessão explícita ou User.Display do UID real
+   do host, com identidade e DISPLAY validados (ADR-010), e introspecção do Manager.
+   Não assumir que LockedHint é confiável
    antes de ensaio real nem confundir introspecção com suspensão observada.
 5. Verificar `graphical-session.target` via GetUnit e ActiveState no systemd user
    do host pelo socket D-Bus montado; não exigir systemd dentro do contêiner.
@@ -25,6 +26,11 @@
 10. Conforme ADR-009, permitir XDG_SESSION_ID ausente no launcher/Compose.
     Preservar preflight dos sockets/cookie e fallback explícito de LockedHint;
     testar que nenhuma outra sessão logind é consultada.
+11. ADR-010: resolução validada com JSON busctl; UID do host separado de UID
+    rootless. Testar sessão incorreta, respostas inválidas e falha sem fallback.
+12. Consultas de lock a cada 5s durante watcher; revalidações por par de retomada
+    e fim. Contagens sanitizadas e falhas persistentes no status; testes sintéticos
+    e integração de streams reais, seguidos por ensaio manual no terminal gráfico.
 
 ADRs existentes preservados. ADR-006 limita uso de subprocessos ao spike.
 Testes substituem o runner para cenários sintéticos; subprocessos reais só no doctor.

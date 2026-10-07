@@ -31,15 +31,19 @@ não versionar configuração resolvida contendo paths/hostname da sessão.
 Não fixe DISPLAY, XAUTHORITY, session ID ou endereço D-Bus. Uma sessão Wayland
 não valida o alvo X11. Código 1 representa diagnóstico degradado; 2, argumento inválido.
 XDG_SESSION_ID não é obrigatório no terminal. Conforme
-[ADR-009](adr/009-optional-session-id.md), ausência desse ID deixa somente a leitura
-de LockedHint indisponível com missing-graphical-session-id. O launcher não bloqueia
-as consultas GNOME/X11 ou PrepareForSleep por esse motivo. Não escolher um ID da
+[ADRs 009/010](adr/010-session-validation-and-watch-checks.md), ausência desse ID
+permite consultar somente User.Display do UID real do host fornecido pelo launcher.
+Antes de LockedHint, validar ID/UID, tipo x11, classe user, sessão local e DISPLAY.
+Falha mantém logind-lock indisponível; o launcher não bloqueia as consultas
+GNOME/X11 ou PrepareForSleep por esse motivo. Não escolher um ID da
 primeira sessão listada, de SSH/TTY ou de outro processo; ID explícito só pode
 corresponder à sessão gráfica observada. As demais verificações permanecem obrigatórias.
 O [pam_systemd do Debian 12](https://manpages.debian.org/bookworm/libpam-systemd/pam_systemd.8.en.html)
 inicializa XDG_SESSION_ID no login. Ausência no terminal indica que essa variável
 não chegou ao comando; a causa específica exige diagnóstico e não implica ausência
-da sessão no logind. O doctor só usa o ID recebido, sem descoberta automática.
+da sessão no logind. O doctor aceita ID explícito validado ou User.Display validado;
+não busca outro candidato se o explícito estiver incorreto. O UID interno 0 em
+rootless não identifica usuário do host; DIGITALMIRROR_HOST_UID vem de id -u.
 XDG_RUNTIME_DIR é compartilhado entre sessões do mesmo usuário e sozinho não
 identifica a sessão gráfica. Não alterar PAM ou exportar ID arbitrário para
 transformar o diagnóstico em available.
@@ -88,7 +92,15 @@ também produzir sinais GNOME e deve ser identificado no relato manual.
 
 Compare GetActive/ActiveChanged com o bloqueio real; uma tela de proteção pode
 não ter a mesma semântica de bloqueio. Valide também LockedHint da mesma sessão
-com consultas durante o ensaio. O JSON resume os sinais recebidos por fonte:
+com consultas durante o ensaio. No ADR-010, o watcher faz essas consultas a cada
+5s em `event_watch.state_observation.lock_polling`. Para comparação, mantenha a
+tela bloqueada por pelo menos 15s e desbloqueada por pelo menos 15s. Um bloqueio
+mais curto pode emitir sinais sem ter amostra de estado true.
+`source_state_counts` distingue true/false/unavailable; `source_reason_counts`
+explica falhas e `comparison_counts` distingue agree/disagree/unavailable.
+Consultas são sequenciais: transição entre duas leituras pode causar divergência,
+sem provar qual fonte representa bloqueio. Nenhum boolean é reutilizado após falha.
+O JSON resume os sinais recebidos por fonte:
 `gnome-lock` para ActiveChanged e `logind-sleep-interface` para PrepareForSleep.
 `no-events` significa **não validado**, e `observed` sozinho não prova um par completo.
 Conforme [ADR-008](adr/008-ordered-spike-signals.md), `cycles` informa:
@@ -110,6 +122,15 @@ lock efetivo ou confiabilidade de LockedHint. O watcher não persiste intervalos
 histórico do stream ou duração dos ciclos. Falta de ciclo não muda, por si só,
 o código de saída de disponibilidade do doctor.
 Sem par de suspensão confirmado, um gap continua UNKNOWN.
+
+Cada false de PrepareForSleep com true pendente provoca revalidação das fontes,
+resumida em `state_observation.resume_revalidation` por sucesso/falha e motivo.
+Durante true pendente, polling de lock é pausado; retomada sem início recebido não
+conta como par confirmado. No fim, `post_watch_checks`/`post_watch_status` trazem
+leituras novas de X11/GNOME/logind/monitores/alvo gráfico. Disponibilidade final não
+esconde falhas intermediárias. Essas consultas não alteram `measurements`, que
+continua medindo somente o polling inicial, nem removem a lista estática de pendências.
+O doctor retorna 1 se alguma consulta de estado/revalidação ou monitor falhar.
 
 Registre somente disponibilidade, contagens, duração aproximada e limite observado.
 Não versione JSON de sessão, journal, screenshots ou conteúdo bruto dos comandos.

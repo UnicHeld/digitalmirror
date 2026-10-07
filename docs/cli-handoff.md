@@ -63,9 +63,22 @@ resumo nem entra nos 180,004s monotônicos. A amostra X11/GetActive antecede o
 watcher e não comprova revalidação de todas as fontes após retomada.
 Próximos passos: revalidar fontes após retorno, comparar lock com fonte validada
 e correlacionar os dois ciclos Windows+L com ações manuais; depois, precisão,
-perfis e integração gráfica conforme o protocolo. Degraded/retorno 1 é esperado quando
-falta o ID e LockedHint fica indisponível; não escolher um ID arbitrário.
+perfis e integração gráfica conforme o protocolo. Na versão ADR-009, falta de ID
+mantinha LockedHint indisponível; não escolher um ID arbitrário.
 O agente continua sem ambiente gráfico herdado e não executou esses ensaios reais.
+
+Etapa 1 para fechar o spike implementada no ADR-010: sem ID, consultar somente
+User.Display do UID real do host; validar identidade/tipo/classe/localidade/DISPLAY
+antes de LockedHint. ID explícito também validado, sem fallback para outro candidato.
+Compose recebe DIGITALMIRROR_HOST_UID separado do UID interno rootless. Watcher
+consulta estados de lock a cada 5s e revalida fontes após pares de retomada e no fim.
+Novos campos JSON v1: event_watch.state_observation e post_watch_checks/status.
+Falhas intermediárias persistem no diagnóstico. Formatter, lint, mypy, 53 testes
+e build passaram via Compose; imagens reconstruídas. Nenhuma nova dependência.
+Próximo ensaio: doctor simples para validar resolução e depois watchers separados
+de bloqueio (manter bloqueado/desbloqueado por ≥15s) e suspensão/retomada. Conferir
+contagens true/false, comparação de fontes, resume_revalidation e post_watch_checks.
+Não declarar etapa 1 concluída ou C0 antes de analisar essas evidências gráficas.
 
 ## Primeiro trabalho
 

@@ -11,6 +11,9 @@ import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+from digitalmirror.doctor import Runner, run_readonly
+from digitalmirror.observation import WatchObservation
+
 EVENT_PATTERNS = {
     "gnome-lock": re.compile(
         r"^/org/gnome/ScreenSaver: org\.gnome\.ScreenSaver\.ActiveChanged \((true|false),\)$"
@@ -67,6 +70,8 @@ def watch_events(
     seconds: int,
     available: Sequence[str],
     env: Mapping[str, str] | None = None,
+    *,
+    runner: Runner = run_readonly,
 ) -> dict[str, object]:
     if not 1 <= seconds <= 900:
         raise ValueError("watch-seconds=1..900")
@@ -75,6 +80,8 @@ def watch_events(
     processes: dict[int, tuple[str, subprocess.Popen[bytes]]] = {}
     buffers: dict[int, bytes] = {}
     environment = dict(os.environ if env is None else env, LC_ALL="C")
+    observation = WatchObservation(environment, runner)
+    sleeping = False
     start = time.monotonic()
     with selectors.DefaultSelector() as selector:
         try:
@@ -122,7 +129,11 @@ def watch_events(
                 buffers[fd] = b""
                 selector.register(fd, selectors.EVENT_READ)
                 result[source]["status"] = "watching"
+            next_poll = time.monotonic()
             while selector.get_map() and time.monotonic() < start + seconds:
+                if not sleeping and time.monotonic() >= next_poll:
+                    observation.sample_locks()
+                    next_poll = time.monotonic() + 5
                 for key, _ in selector.select(
                     min(0.25, max(0, start + seconds - time.monotonic()))
                 ):
@@ -144,11 +155,21 @@ def watch_events(
                         line, buffers[fd] = buffers[fd].split(b"\n", 1)
                         signal = parse_signal(source, line.decode("utf-8", errors="replace"))
                         if signal:
+                            resumed = (
+                                source == "logind-sleep-interface"
+                                and signal == "false"
+                                and cycles[source].pending_start
+                            )
                             cycles[source].observe(signal == "true")
                             name = signal + "_count"
                             count = result[source][name]
                             assert isinstance(count, int)
                             result[source][name] = count + 1
+                            if source == "logind-sleep-interface":
+                                sleeping = signal == "true"
+                            if resumed:
+                                observation.revalidate_resume()
+                                next_poll = time.monotonic()
             for source, process in processes.values():
                 if result[source]["status"] == "watching" and process.poll() is not None:
                     result[source]["status"] = "failed"
@@ -177,6 +198,7 @@ def watch_events(
         "requested_seconds": seconds,
         "elapsed_monotonic_seconds": round(time.monotonic() - start, 6),
         "sources": result,
+        "state_observation": observation.report(),
         "limitation": (
             "ciclos dos sinais recebidos; não validam ações reais, continuidade do serviço "
             "ou duração; sem eventos não valida entrega"

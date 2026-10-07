@@ -2,8 +2,10 @@
 
 import argparse
 import json
+import os
+from dataclasses import asdict
 
-from digitalmirror.doctor import diagnose
+from digitalmirror.doctor import collect_checks, diagnose
 from digitalmirror.events import watch_events
 
 
@@ -35,9 +37,21 @@ def main(argv: list[str] | None = None) -> int:
             [check["source"] for check in checks if check["status"] == "available"],
         )
         report["event_watch"] = watch
+        # Uma leitura final é distinta da medição de polling anterior ao watcher.
+        post_checks = collect_checks(os.environ)
+        report["post_watch_checks"] = [asdict(check) for check in post_checks]
+        report["post_watch_status"] = (
+            "available" if all(check.status == "available" for check in post_checks) else "degraded"
+        )
         sources = watch["sources"]
         assert isinstance(sources, dict)
-        if any(source["status"] == "failed" for source in sources.values()):
+        observation = watch["state_observation"]
+        assert isinstance(observation, dict)
+        if (
+            any(source["status"] == "failed" for source in sources.values())
+            or observation["status"] != "available"
+            or report["post_watch_status"] != "available"
+        ):
             report["status"] = "degraded"
     print(json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False))
     return 0 if report["status"] == "available" else 1
