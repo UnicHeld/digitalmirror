@@ -7,6 +7,8 @@
 - [x] US-01.3: workflow CI descobre testes presentes/futuros; lint/tipos/build locais passam.
 - [x] Documentação distingue contratos verificados de motor ainda não implementado.
 
-CI remota não executada; nenhuma issue encerrada ou commit/push realizado.
+Commit de implementação: `0a552a5`. Checklist da issue #1 sincronizado;
+CI remota/push aguardam escopo `workflow`, e Project aguarda `project`.
+Nenhuma issue encerrada.
 Fluxo vigente após ADR-007: checks/build locais e CI executados via Docker/Compose;
 a evidência da implementação inicial fora do contêiner é histórica.

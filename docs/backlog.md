@@ -11,8 +11,9 @@ Campos: Status (`Backlog`, `Ready`, `In Progress`, `Review`, `Done`), Prioridade
 M0 = spike e contratos. M1 = versão utilizável completa em Chrome/Chromium, incluindo autostart e dashboard. M2 = Firefox, histórico avançado e calibração. Não estabelecer datas fictícias sem medir o spike; ordenar por dependência.
 
 Execução vigente: **Docker/Compose obrigatório** para desenvolvimento, CI,
-diagnóstico e futuro runtime (ADR-007). Itens abaixo adaptam o plano local;
-issues/Project no GitHub ainda refletem a publicação inicial e não foram editados.
+diagnóstico e futuro runtime (ADR-007). Issues #1/#2/#8/#9 sincronizadas com
+entregas, pendências e essa estratégia. Atualização dos campos do Project aguarda
+o escopo `project`; publicação do commit `0a552a5`/CI aguarda o escopo `workflow`.
 
 ### EP-01 · [#1](https://github.com/UnicHeld/digitalmirror/issues/1) — Contrato do produto e base SDD
 
@@ -28,7 +29,8 @@ issues/Project no GitHub ainda refletem a publicação inicial e não foram edit
 
 Evidência local: `specs/001-foundation/`, `docs/requirements.md`, `docs/adr/`,
 16 casos em `tests/fixtures/workday-cases.json` e CI por descoberta. Testes/checks
-executados no workspace; CI remota e issue/Project não atualizados.
+executados via Docker Compose. Checklist da issue atualizado; issue permanece
+aberta até publicação. CI remota e campos do Project ainda pendentes.
 
 **Aceite:** documentos incluem 09–18, almoço de 1h, fórmulas distintas de presença/interação, gaps e limites de inferência. Cada RF/RNF possui épico responsável. CI verifica schema das fixtures e testes do motor quando implementado. Nenhuma credencial ou telemetria pessoal faz parte dos exemplos.
 

@@ -97,8 +97,8 @@ Ainda necessários conforme [protocolo](spike-ep02.md):
 
 Decisão: manter GNOME/logind como candidatos; subprocessos limitados ao spike.
 Sem evidência real, não fixar adaptador final, declarar C0 atingido ou avançar ao EP-03.
-Metas de desempenho completas permanecem no EP-09. Nenhuma issue/Project foi
-alterado; nenhum commit/push foi feito.
+Metas de desempenho completas permanecem no EP-09. Na coleta dessa evidência
+inicial, nenhuma issue/Project havia sido alterada e nenhum commit/push havia sido feito.
 
 ## Atualização — execução via Docker/Compose (ADR-007)
 
