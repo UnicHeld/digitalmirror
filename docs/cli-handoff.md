@@ -24,8 +24,10 @@ README do Project inclui Docker/Compose obrigatório; EP-03 permanece no Backlog
 EP-02 tem `digitalmirror doctor`, polling finito e observação passiva de sinais.
 Leia [procedimento](spike-ep02.md) e [relatório inicial](spike-ep02-report.md).
 Este ambiente Debian 12/Python 3.11 acessa logind, mas não recebeu DISPLAY,
-D-Bus de sessão ou identificação da sessão gráfica. Lock/unlock, sleep/resume,
-monitores, precisão de foco, dois perfis e autostart real continuam pendentes.
+D-Bus de sessão ou identificação da sessão gráfica. O terminal do usuário já
+confirmou leitura de X11/GNOME e dois monitores via Compose (evidência abaixo).
+Lock/unlock, sleep/resume, precisão de foco/monitor, dois perfis e autostart real
+continuam pendentes.
 Não iniciar EP-03 nem declarar C0 atingido antes desses ensaios.
 
 Continuação publicada do EP-02 no commit `dfe2a24`: ADR-008 e resumo ordenado
@@ -38,10 +40,16 @@ e build sdist/wheel. Issue #2 e README do Project sincronizados; US-02.1 conclu�
 como diagnóstico/relatório, sem encerrar os ensaios reais das demais histórias.
 
 Logind sem eventos durante 2s confirma somente conexão, com cycle_status=no-events.
-Novo resultado do terminal após a correção ainda pendente. Próximo passo: repetir
-`sh scripts/compose-desktop run --rm desktop` no terminal GNOME/X11 e comparar
-ciclos com ações manuais conforme o protocolo. Degraded/retorno 1 é esperado quando
+Resultado recebido do terminal após a correção: **10 de 11 fontes disponíveis**,
+incluindo foco/idle X11, GNOME e XRandR com dois monitores, um principal e janela
+atribuída. Somente LockedHint indisponível por missing-graphical-session-id.
+Uma amostra com janela de aproximadamente 181ms não mede CPU média de polling;
+os 21,95% reportados não comprovam consumo contínuo. Evidência informada pelo
+usuário às 00:56:06 UTC de 07/10 (06/10 local), detalhada no relatório.
+Próximo passo: polling de 12 amostras e watchers isolados para comparar ciclos
+com ações manuais conforme o protocolo. Degraded/retorno 1 é esperado quando
 falta o ID e LockedHint fica indisponível; não escolher um ID arbitrário.
+O agente continua sem ambiente gráfico herdado e não executou esses ensaios reais.
 
 ## Primeiro trabalho
 

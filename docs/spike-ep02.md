@@ -36,6 +36,13 @@ de LockedHint indisponível com missing-graphical-session-id. O launcher não bl
 as consultas GNOME/X11 ou PrepareForSleep por esse motivo. Não escolher um ID da
 primeira sessão listada, de SSH/TTY ou de outro processo; ID explícito só pode
 corresponder à sessão gráfica observada. As demais verificações permanecem obrigatórias.
+O [pam_systemd do Debian 12](https://manpages.debian.org/bookworm/libpam-systemd/pam_systemd.8.en.html)
+inicializa XDG_SESSION_ID no login. Ausência no terminal indica que essa variável
+não chegou ao comando; a causa específica exige diagnóstico e não implica ausência
+da sessão no logind. O doctor só usa o ID recebido, sem descoberta automática.
+XDG_RUNTIME_DIR é compartilhado entre sessões do mesmo usuário e sozinho não
+identifica a sessão gráfica. Não alterar PAM ou exportar ID arbitrário para
+transformar o diagnóstico em available.
 Sem sessão, `sh scripts/compose run --rm dev digitalmirror doctor` continua
 funcionando e identifica fontes ausentes; não é ensaio da sessão real. Nenhum
 serviço usa privileged, Docker socket, home completo ou xhost +.
@@ -53,6 +60,8 @@ inclui CPU do processo e filhos, latência p95, atraso p95 e RSS máximo; RSS de
 filhos é o maior filho, **não** soma simultânea. CPU usa tempo de execução do loop,
 incluindo esperas; startup e watcher são externos à janela medida. Uma amostra
 única não representa CPU média de polling. Não comparar com soak RNF de 8h.
+Por exemplo, 21,95% em uma única janela de aproximadamente 181ms descreve o custo
+daquela consulta, sem os intervalos de espera de um polling contínuo.
 
 Verifique count/primary_count com uma e duas telas, geometria negativa e janela
 no monitor secundário. Mude o foco manualmente entre terminal, IDE e navegador,
@@ -72,6 +81,10 @@ O polling inicial termina antes da observação. Depois dele, bloqueie/desbloque
 manualmente e, em outro ensaio, suspenda/retome pelo GNOME. O observador permanece
 passivo, sem inhibitors ou chamadas de alteração de sessão. A duração é monotônica;
 tempo suspenso não entra no deadline Linux e a execução termina após a retomada.
+Para um ensaio curto de bloqueio, use `--watch-seconds 120`, aguarde cerca de 5s
+para conexão dos watchers, bloqueie/desbloqueie uma vez e espere o JSON final.
+Execute a suspensão em uma janela separada; bloqueio automático na retomada pode
+também produzir sinais GNOME e deve ser identificado no relato manual.
 
 Compare GetActive/ActiveChanged com o bloqueio real; uma tela de proteção pode
 não ter a mesma semântica de bloqueio. Valide também LockedHint da mesma sessão

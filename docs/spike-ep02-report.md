@@ -209,3 +209,53 @@ bloqueada pelo cache gh fora do sandbox; repetida após autorização e concluí
 Issue #2 e README do Project atualizados com os ADRs 008/009, CI e pendências.
 US-02.1 concluída como comando/relatório; EP-02 continua In Progress, C0 pendente
 e EP-03 no Backlog. CI sem sessão gráfica não valida as histórias de transição.
+
+## Leitura real enviada pelo usuário — 06/10/2026 no calendário local
+
+Evidência: resumo JSON fornecido pelo usuário após executar
+`sh scripts/compose-desktop run --rm desktop` em seu terminal GNOME/X11.
+Observação às 00:56:06 UTC de 07/10/2026 (21:56:06 em America/Sao_Paulo de
+06/10/2026). Esta execução não foi iniciada pelo agente. Somente os resultados
+técnicos agregados abaixo foram transcritos; o JSON de sessão não foi versionado.
+
+| Fonte | Resultado informado |
+| --- | --- |
+| X11 foco, classe, PID, workspace e geometria | Cinco consultas disponíveis / read-ok |
+| Idle X11 | Disponível / read-ok |
+| XRandR | Disponível: dois monitores, um principal, janela focada atribuída a monitor |
+| GNOME GetActive | Disponível / read-ok |
+| logind LockedHint | Indisponível / missing-graphical-session-id |
+| logind PrepareForSleep | Introspecção disponível / read-ok; nenhum ciclo observado nesta execução |
+| graphical-session.target | Disponível / read-ok; não comprova autostart |
+
+Resultado: **10 de 11 fontes disponíveis**, diagnóstico degraded esperado pelo
+LockedHint ausente. Confirma leitura das fontes gráficas e autenticação dos mounts
+desktop nessa execução. Não confirma a precisão da atribuição de monitor, foco,
+lock ou continuidade após suspensão. Uma consulta GetActive bem-sucedida não prova
+que seu valor acompanha bloqueio efetivo.
+
+Uma amostra, intervalo nominal de 5s: janela medida de 0,181052s, latência p95
+de 0,180950s, atraso de 0,000070s, CPU própria 0,008383s e de filhos 0,031358s.
+CPU de 21,95% corresponde a essa janela curta, sem espera entre amostras; não é
+CPU média do polling contínuo. RSS máximo próprio e do maior filho: 18.944 KiB
+cada; não somar como memória simultânea. Startup, daemon Docker e watcher não
+estão incluídos. Não há evidência suficiente para validar RNF de consumo ou 8h.
+
+XDG_SESSION_ID ausente confirma que o comando não recebeu a variável; não prova
+ausência da sessão no logind. O doctor atual só usa o ID explícito do ambiente e
+não implementa descoberta de sessão. A origem exata da ausência no terminal não
+foi diagnosticada. Consultar o logind por UID/sessão e validar a associação ao
+DISPLAY seria uma mudança futura, exigindo decisão e testes; não exportar um ID
+arbitrário nem recuperar ambiente de outros processos.
+
+O processo do agente continua sem DISPLAY, XAUTHORITY, XDG_RUNTIME_DIR,
+DBUS_SESSION_BUS_ADDRESS ou XDG_SESSION_TYPE. A disponibilidade no terminal do
+usuário não transfere esse ambiente ao agente. Próximos ensaios via Compose:
+polling de 12 amostras e watchers isolados com bloqueio/desbloqueio e
+suspensão/retomada voluntários, conforme o protocolo. Precisão de foco,
+LockedHint, dois perfis, autostart e C0 permanecem pendentes.
+
+Validação desta atualização documental: `git diff --check` e
+`sh scripts/compose run --rm dev` passaram (formatter, lint, mypy, 40 testes e
+build sdist/wheel em Python 3.11). Não houve alteração de código ou novo ensaio
+gráfico executado pelo agente.
