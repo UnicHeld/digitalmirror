@@ -139,3 +139,16 @@ precisa de versão compatível e validação no EP-07 antes da API em loopback.
 Limitação registrada no ADR-007; Docker não foi atualizado automaticamente.
 Não foram medidas novas metas de 8h ou overhead do Docker. Evidências anteriores
 não foram reaproveitadas como benchmark da execução em contêiner.
+
+## Publicação e CI — 06/10/2026
+
+Implementação publicada na main no commit `0a552a5`, com handoff inicial em
+`6cdf7f3`. [CI remota via Compose](https://github.com/UnicHeld/digitalmirror/actions/runs/37550585612)
+passou em Python 3.11 e 3.13: configuração Compose, build das imagens dev/runtime,
+formatter, lint, mypy, 32 testes e build sdist/wheel com artefatos publicados.
+A CI não monta uma sessão gráfica real e não valida as pendências do spike.
+
+Issues #1/#2/#8/#9 sincronizadas com as entregas e Docker/Compose. Issue #1
+encerrada; Project privado atualizado: EP-01 Done, EP-02 In Progress e demais
+épicos no Backlog. README do Project explicita Docker obrigatório.
+EP-02/C0, RNF de 8h e validação de loopback rootless no EP-07 continuam pendentes.

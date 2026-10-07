@@ -4,7 +4,7 @@
 
 Na publicação inicial, o repositório público, o Project privado e os 12 épicos continham somente planejamento, com 48 histórias em checklists. A lista de todas as abas/apps abertas e o tempo apenas em segundo plano não foi adicionada ao escopo: o contrato mede foco e interação recente.
 
-## Progresso local — 06/10/2026
+## Progresso publicado — 06/10/2026
 
 **Estratégia vigente:** sempre usar Docker/Compose conforme ADR-007 e AGENTS.md.
 Build: `sh scripts/compose build dev desktop`; checks: `sh scripts/compose run --rm dev`.
@@ -12,12 +12,14 @@ Diagnóstico real: `sh scripts/compose-desktop run --rm desktop` no terminal GNO
 Não criar venv nem instalar/executar Python ou ferramentas do projeto no host.
 As evidências do primeiro spike direto são históricas; novas validações usam Docker.
 
-EP-01 entregue no workspace: spec/plan/tasks, ADRs 001–006, rastreabilidade,
+EP-01 publicado na main: spec/plan/tasks, ADRs 001–006, rastreabilidade,
 schema e 16 cenários sintéticos, suíte de contratos/CLI e workflow CI.
 O motor permanece no EP-05. Issues #1/#2/#8/#9 atualizadas com entregas,
 pendências e a estratégia Docker. Commit de implementação: `0a552a5`.
-Push/CI remota e atualização dos campos do Project aguardam autorização do token
-com os escopos `workflow` e `project`. Nenhuma issue foi encerrada.
+Push concluído; [CI remota](https://github.com/UnicHeld/digitalmirror/actions/runs/37550585612)
+passou em Python 3.11 e 3.13 via Compose (32 testes e build sdist/wheel).
+Issue #1 encerrada; Project privado atualizado: EP-01 Done, EP-02 In Progress.
+README do Project inclui Docker/Compose obrigatório; EP-03 permanece no Backlog.
 
 EP-02 tem `digitalmirror doctor`, polling finito e observação passiva de sinais.
 Leia [procedimento](spike-ep02.md) e [relatório inicial](spike-ep02-report.md).

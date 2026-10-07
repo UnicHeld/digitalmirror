@@ -12,8 +12,10 @@ M0 = spike e contratos. M1 = versão utilizável completa em Chrome/Chromium, in
 
 Execução vigente: **Docker/Compose obrigatório** para desenvolvimento, CI,
 diagnóstico e futuro runtime (ADR-007). Issues #1/#2/#8/#9 sincronizadas com
-entregas, pendências e essa estratégia. Atualização dos campos do Project aguarda
-o escopo `project`; publicação do commit `0a552a5`/CI aguarda o escopo `workflow`.
+entregas, pendências e essa estratégia. Commit `0a552a5` publicado na main;
+[CI via Compose](https://github.com/UnicHeld/digitalmirror/actions/runs/37550585612)
+passou em Python 3.11/3.13. Project atualizado: EP-01 Done, EP-02 In Progress;
+demais épicos permanecem no Backlog.
 
 ### EP-01 · [#1](https://github.com/UnicHeld/digitalmirror/issues/1) — Contrato do produto e base SDD
 
@@ -27,10 +29,10 @@ o escopo `project`; publicação do commit `0a552a5`/CI aguarda o escopo `workfl
 - [x] US-01.2 — Fixar contrato de estados, unidades, qualidade e política de privacidade.
 - [x] US-01.3 — Criar fixtures dos casos de jornada e critérios de conclusão.
 
-Evidência local: `specs/001-foundation/`, `docs/requirements.md`, `docs/adr/`,
+Evidência publicada: `specs/001-foundation/`, `docs/requirements.md`, `docs/adr/`,
 16 casos em `tests/fixtures/workday-cases.json` e CI por descoberta. Testes/checks
-executados via Docker Compose. Checklist da issue atualizado; issue permanece
-aberta até publicação. CI remota e campos do Project ainda pendentes.
+executados via Docker Compose, localmente e na CI Python 3.11/3.13.
+Checklist concluído, issue #1 encerrada e status Done no Project.
 
 **Aceite:** documentos incluem 09–18, almoço de 1h, fórmulas distintas de presença/interação, gaps e limites de inferência. Cada RF/RNF possui épico responsável. CI verifica schema das fixtures e testes do motor quando implementado. Nenhuma credencial ou telemetria pessoal faz parte dos exemplos.
 
@@ -47,7 +49,7 @@ aberta até publicação. CI remota e campos do Project ainda pendentes.
 - [ ] US-02.3 — Spike mede custo de polling e integração de autostart com GNOME.
 - [ ] US-02.4 — Prova de correlação navegador/X11 com duas janelas e perfis.
 
-Progresso local: comando doctor, medidor finito e watcher de sinais implementados,
+Status In Progress no Project: comando doctor, medidor finito e watcher de sinais publicados,
 com testes sintéticos e diagnóstico real de logind. Ensaios gráficos e aceite final
 pendentes; veja `docs/spike-ep02-report.md`. As histórias permanecem abertas.
 
