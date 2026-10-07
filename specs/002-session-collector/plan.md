@@ -18,6 +18,13 @@
 8. Observação finita de eventos via `stdbuf -oL gdbus monitor`, com leitura
    incremental limitada, regex de dois sinais e contagens; sem stdout bruto.
    Encerrar/recolher filhos ao fim ou interrupção. Distinguir zero eventos de validação.
+9. Conforme ADR-008, resumir a ordem true/false por fonte em memória constante:
+   ciclos completos, início pendente, fim sem início e duplicatas. Preservar status
+   de conexão; falhas invalidam confirmação mesmo após pares recebidos. Testar
+   sequências invertidas, múltiplos ciclos, streams independentes e encerramento.
+10. Conforme ADR-009, permitir XDG_SESSION_ID ausente no launcher/Compose.
+    Preservar preflight dos sockets/cookie e fallback explícito de LockedHint;
+    testar que nenhuma outra sessão logind é consultada.
 
 ADRs existentes preservados. ADR-006 limita uso de subprocessos ao spike.
 Testes substituem o runner para cenários sintéticos; subprocessos reais só no doctor.

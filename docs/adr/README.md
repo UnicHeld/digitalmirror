@@ -11,3 +11,5 @@ novo registro antes da implementação; evidência incompleta permanece indicada
 - [005 — Foco global](005-global-focus.md)
 - [006 — Diagnóstico de M0](006-passive-doctor.md)
 - [007 — Docker/Compose obrigatório](007-docker-compose.md)
+- [008 — Ciclos ordenados de sinais no spike](008-ordered-spike-signals.md)
+- [009 — ID de sessão opcional no diagnóstico](009-optional-session-id.md)

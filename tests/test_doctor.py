@@ -120,6 +120,24 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(checks[0].reason, "x11-session-not-confirmed")
         self.assertEqual(next(c for c in checks if c.source == "logind-lock").status, "unavailable")
 
+    def test_missing_session_id_keeps_other_sources_without_selecting_another_session(self):
+        calls = []
+        environment = {key: value for key, value in X11_ENV.items() if key != "XDG_SESSION_ID"}
+
+        def runner(argv):
+            calls.append(argv)
+            return healthy_runner(argv)
+
+        report = diagnose(env=environment, runner=runner)
+        checks = {check["source"]: check for check in report["checks"]}
+        self.assertEqual(report["status"], "degraded")
+        self.assertEqual(checks["logind-lock"]["status"], "unavailable")
+        self.assertEqual(checks["logind-lock"]["reason"], "missing-graphical-session-id")
+        for source in ("x11-focus", "gnome-lock", "logind-sleep-interface"):
+            self.assertEqual(checks[source]["status"], "available")
+        self.assertFalse(any("org.freedesktop.login1.Manager.GetSession" in call for call in calls))
+        self.assertFalse(any(call[0] == "busctl" for call in calls))
+
     def test_success_is_read_availability_not_transition_validation(self):
         report = diagnose(env=X11_ENV, runner=healthy_runner)
         self.assertEqual(report["status"], "available")
@@ -302,6 +320,8 @@ class EventTests(unittest.TestCase):
         self.assertEqual(source["status"], "observed")
         self.assertEqual(source["true_count"], 1)
         self.assertEqual(source["false_count"], 1)
+        self.assertEqual(source["cycle_status"], "complete")
+        self.assertEqual(source["cycles"]["complete_count"], 1)
         self.assertTrue(all(child.poll() is not None for child in children))
 
     def test_only_expected_signal_booleans_are_parsed(self):
@@ -330,6 +350,10 @@ class EventTests(unittest.TestCase):
             report = watch_events(1, [])
         spawn.assert_not_called()
         self.assertTrue(all(c["status"] == "not-tested" for c in report["sources"].values()))
+        for source in report["sources"].values():
+            self.assertEqual(source["cycle_status"], "not-tested")
+            self.assertEqual(source["cycles"]["complete_count"], 0)
+            self.assertFalse(source["cycles"]["pending_start"])
 
     def test_missing_binary_and_watch_limits(self):
         with patch("digitalmirror.events.shutil.which", return_value=None):

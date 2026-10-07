@@ -79,7 +79,7 @@ A CI utiliza o mesmo Compose com Python 3.11/3.13.
 ## Diagnóstico da sessão real
 
 No terminal GNOME/X11 do Debian, com Docker Engine local Linux e as variáveis
-originais da sessão (DISPLAY, XAUTHORITY, XDG_SESSION_ID, XDG_RUNTIME_DIR e D-Bus):
+originais da sessão (DISPLAY, XAUTHORITY, XDG_RUNTIME_DIR e D-Bus):
 
 ```bash
 sh scripts/compose-desktop run --rm desktop
@@ -87,7 +87,15 @@ sh scripts/compose-desktop run --rm desktop digitalmirror doctor --samples 12 --
 sh scripts/compose-desktop run --rm desktop digitalmirror doctor --watch-seconds 300
 ```
 
+O watcher resume ciclos true → false, duplicatas e sinais sem par por fonte.
+`cycle_status=complete` confirma somente a ordem recebida; ensaios manuais ainda
+devem confirmar bloqueio e suspensão reais. Detalhes no protocolo do spike.
+
 O launcher valida os sockets/cookie antes de montar e não adivinha credenciais.
+`XDG_SESSION_ID` é opcional: quando ausente, o diagnóstico continua e informa
+`logind-lock=unavailable` / `missing-graphical-session-id`. GNOME/X11 e sinais de
+suspensão continuam sendo consultados; não exporte um ID arbitrário para ocultar
+essa limitação. O código 1/degraded nesse caso é esperado.
 O serviço desktop usa imagem somente leitura, tmpfs e capabilities removidas.
 Em rootless, UID 0 interno corresponde ao usuário sem privilégios do host.
 Não configura autostart, bloqueia/suspende o computador nem altera foco. Saída JSON

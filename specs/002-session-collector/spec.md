@@ -27,10 +27,22 @@ Given Wayland ou sessão não confirmada como X11, Then diagnóstico de X11 indi
 Given erro, timeout ou resposta inválida, Then motivo normalizado, sem stderr pessoal.
 Given fonte presente, Then testar leitura efetiva, sem confundir binário com fonte saudável.
 Given logind acessível sem sessão gráfica identificada, Then não usar LockedHint de outra sessão.
+Given terminal GNOME/X11 sem XDG_SESSION_ID, Then o launcher continua após validar
+cookie/sockets e Docker local; GNOME/X11 são consultados, logind-lock fica
+indisponível com missing-graphical-session-id e o doctor retorna diagnóstico degradado.
+O ID não é adivinhado nem recuperado do ambiente de outro processo (ADR-009).
 
 CLI retorna JSON versionado com fontes, motivos, fallback e medições agregadas.
 `--watch-seconds` (0–900; padrão 0) observa ActiveChanged e PrepareForSleep em
 streams limitados, mostrando somente contagens de true/false e status de conexão.
+Conforme ADR-008, cada fonte inclui `cycles` com `complete_count`, `pending_start`,
+`unpaired_end_count` e `duplicate_signal_count`, mais `cycle_status`.
+Given false seguido de true, Then não registrar ciclo completo: fim sem início e
+início pendente ficam explícitos. Given true/true/false, Then contar um ciclo e uma
+duplicata. Given conexão encerrada, Then cycle_status=failed, mesmo com pares já lidos.
+Complete exige ao menos um true seguido de false, nenhum início pendente e nenhum
+fim sem início na janela. Não há armazenamento do stream nem inferência de duração.
+Campos existentes e schema_version=1 são preservados; o resumo é uma extensão aditiva.
 GetActive/ActiveChanged não é considerado prova de bloqueio sem ensaio comparativo.
 Ausência de eventos não prova fonte funcional. Nenhum comando inicia lock/sleep.
 Cada amostra revalida fontes; falhas posteriores ficam visíveis no histórico agregado.

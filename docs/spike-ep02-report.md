@@ -152,3 +152,50 @@ Issues #1/#2/#8/#9 sincronizadas com as entregas e Docker/Compose. Issue #1
 encerrada; Project privado atualizado: EP-01 Done, EP-02 In Progress e demais
 épicos no Backlog. README do Project explicita Docker obrigatório.
 EP-02/C0, RNF de 8h e validação de loopback rootless no EP-07 continuam pendentes.
+
+## Continuação local — ciclos ordenados (ADR-008)
+
+O watcher passa a distinguir true → false de false → true, contar duplicatas e
+informar sinais sem par, mantendo os campos anteriores do JSON v1. O estado por
+fonte não guarda histórico de eventos nem calcula duração. Conexão encerrada
+continua failed mesmo após um ciclo recebido; CLI retorna 1 nesse cenário.
+
+Validação local via Compose/Python 3.11: formatter, lint, mypy, **38 testes** e
+build sdist/wheel passaram. Imagens dev/runtime reconstruídas. Seis novos testes
+cobrem ordem invertida, duplicatas, bordas parciais, falha após par, streams
+independentes/fragmentados, saída sanitizada e integração com CLI. A primeira
+rodada de lint encontrou duas linhas longas; corrigidas e checks repetidos.
+
+Runtime rootless com apenas D-Bus de sistema montado read-only: PrepareForSleep
+consultável e watcher conectado por aproximadamente 2s. Resultado: zero sinais,
+zero ciclos, nenhum início pendente e cycle_status=no-events. GNOME permanece
+not-tested. Diagnóstico degradado/retorno 1 esperado pela ausência da sessão gráfica.
+Nenhum comando provocou lock, suspensão ou mudança de foco.
+
+O launcher de sessão real voltou a recusar execução sem GNOME/X11 com código 2.
+Ensaios reais e C0 continuam pendentes. Esta continuação ainda não foi publicada
+nem validada pela CI remota ou por imagem Python 3.13; a evidência anterior de CI
+cobre a entrega de 32 testes publicada, não este incremento de 38 testes.
+
+## Correção do launcher — XDG_SESSION_ID ausente (ADR-009)
+
+O usuário informou que o launcher recusou execução no terminal com
+`XDG_SESSION_ID da sessão não foi recebido.`. Isso confirma somente ausência da
+variável no ambiente daquele comando; não confirma falta da sessão gráfica.
+
+O ID passa a ser opcional no preflight e no override Compose. Sem ele, X11/GNOME
+e PrepareForSleep continuam consultáveis quando seus sockets estão disponíveis;
+LockedHint fica indisponível com missing-graphical-session-id, mantendo o doctor
+degradado/retorno 1. Nenhum ID ou ambiente de outro processo é recuperado.
+
+Validações locais via Compose/Python 3.11: formatter, lint, mypy, **40 testes** e
+build sdist/wheel passaram. Regressões verificam Xauthority/sockets obrigatórios
+mesmo sem ID e fontes independentes sem GetSession/LockedHint de outra sessão.
+Override Compose resolvido com variáveis sintéticas e XDG_SESSION_ID ausente:
+ID vazio aceito; mounts read-only/create_host_path=false e ausência de portas
+preservados. Sintaxe dos três scripts shell e git diff --check passaram.
+Imagens dev/runtime reconstruídas com sucesso para este incremento.
+
+Aguardando resultado do novo diagnóstico no terminal do usuário. O erro anterior
+não valida foco, bloqueio, suspensão, monitores, perfis ou autostart. C0 continua
+pendente. Novos ciclos/ID opcional ainda aguardam publicação e CI remota.

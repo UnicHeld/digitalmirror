@@ -52,6 +52,9 @@ Checklist concluído, issue #1 encerrada e status Done no Project.
 Status In Progress no Project: comando doctor, medidor finito e watcher de sinais publicados,
 com testes sintéticos e diagnóstico real de logind. Ensaios gráficos e aceite final
 pendentes; veja `docs/spike-ep02-report.md`. As histórias permanecem abertas.
+Continuação local conforme ADR-008: watcher resume ciclos ordenados, duplicatas
+e sinais sem par. Checks Compose/Python 3.11 com 38 testes e build passaram;
+incremento ainda não publicado. Nenhum ciclo real foi observado nesta execução.
 
 **Aceite:** relatório de fontes disponíveis e ausentes, precisão observada e custo básico. Diagnóstico é só leitura, sem mover foco ou gerar entradas. As fontes indisponíveis têm fallback definido ou estado desconhecido. Evidência do alvo real registrada sem conteúdo pessoal.
 

@@ -115,3 +115,28 @@ class ComposeLauncherTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("Socket D-Bus", result.stderr)
         self.assertFalse(self.marker.exists())
+
+    def test_missing_session_id_does_not_bypass_authority_or_socket_checks(self):
+        environment = {
+            "XDG_SESSION_TYPE": "x11",
+            "DISPLAY": ":99",
+            "XDG_RUNTIME_DIR": str(self.directory),
+        }
+        self.assertNotIn("XDG_SESSION_ID", environment)
+        result = self.launch("compose-desktop", ["config", "--quiet"], environment)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("XAUTHORITY", result.stderr)
+        self.assertNotIn("XDG_SESSION_ID", result.stderr)
+
+        authority = self.directory / "synthetic-authority"
+        authority.write_text("synthetic")
+        (self.directory / "bus").touch()
+        result = self.launch(
+            "compose-desktop",
+            ["config", "--quiet"],
+            environment | {"XAUTHORITY": str(authority)},
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("Socket D-Bus", result.stderr)
+        self.assertNotIn("XDG_SESSION_ID", result.stderr)
+        self.assertFalse(self.marker.exists())

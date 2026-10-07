@@ -10,7 +10,7 @@ fail() {
 [ "$(id -u)" -ne 0 ] || fail 'Execute como o usuário da sessão GNOME, sem sudo.'
 [ "${XDG_SESSION_TYPE:-}" = x11 ] || fail 'Execute no terminal da sessão GNOME/X11.'
 [ -n "${DISPLAY:-}" ] || fail 'DISPLAY da sessão não foi recebido.'
-[ -n "${XDG_SESSION_ID:-}" ] || fail 'XDG_SESSION_ID da sessão não foi recebido.'
+# ID ausente degrada somente LockedHint; X11/GNOME usam os sockets herdados.
 [ -n "${XDG_RUNTIME_DIR:-}" ] || fail 'XDG_RUNTIME_DIR da sessão não foi recebido.'
 [ -n "${XAUTHORITY:-}" ] || fail 'XAUTHORITY deve vir da sessão gráfica; não adivinhar o caminho.'
 [ -f "$XAUTHORITY" ] && [ -r "$XAUTHORITY" ] || fail 'Xauthority da sessão ausente ou sem leitura.'

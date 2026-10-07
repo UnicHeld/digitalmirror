@@ -30,6 +30,12 @@ Hostname do host é fornecido transitoriamente para cookies Xauthority FamilyLoc
 não versionar configuração resolvida contendo paths/hostname da sessão.
 Não fixe DISPLAY, XAUTHORITY, session ID ou endereço D-Bus. Uma sessão Wayland
 não valida o alvo X11. Código 1 representa diagnóstico degradado; 2, argumento inválido.
+XDG_SESSION_ID não é obrigatório no terminal. Conforme
+[ADR-009](adr/009-optional-session-id.md), ausência desse ID deixa somente a leitura
+de LockedHint indisponível com missing-graphical-session-id. O launcher não bloqueia
+as consultas GNOME/X11 ou PrepareForSleep por esse motivo. Não escolher um ID da
+primeira sessão listada, de SSH/TTY ou de outro processo; ID explícito só pode
+corresponder à sessão gráfica observada. As demais verificações permanecem obrigatórias.
 Sem sessão, `sh scripts/compose run --rm dev digitalmirror doctor` continua
 funcionando e identifica fontes ausentes; não é ensaio da sessão real. Nenhum
 serviço usa privileged, Docker socket, home completo ou xhost +.
@@ -69,11 +75,27 @@ tempo suspenso não entra no deadline Linux e a execução termina após a retom
 
 Compare GetActive/ActiveChanged com o bloqueio real; uma tela de proteção pode
 não ter a mesma semântica de bloqueio. Valide também LockedHint da mesma sessão
-com consultas durante o ensaio. O JSON conta apenas os sinais true/false:
+com consultas durante o ensaio. O JSON resume os sinais recebidos por fonte:
 `gnome-lock` para ActiveChanged e `logind-sleep-interface` para PrepareForSleep.
 `no-events` significa **não validado**, e `observed` sozinho não prova um par completo.
-Para aceite, ambos os contadores devem registrar a ida e a volta em ensaio isolado,
-comparados com a ação real. O watcher não persiste intervalos nem resolve duplicatas.
+Conforme [ADR-008](adr/008-ordered-spike-signals.md), `cycles` informa:
+
+- `complete_count`: quantidade de sequências true → false recebidas.
+- `pending_start`: true ainda sem false posterior no fim da janela.
+- `unpaired_end_count`: quantidade de false recebidos sem true pendente.
+- `duplicate_signal_count`: sinais consecutivos iguais; não multiplicam ciclos.
+
+`cycle_status=complete` exige ao menos um ciclo, nenhum início pendente e nenhum
+fim sem início. True/true/false conta um ciclo e uma duplicata; false/true tem
+contagens iguais, mas nenhum ciclo e status partial. Conexão interrompida produz
+failed, mesmo após um par. Fonte ausente produz not-tested; sem sinais, no-events.
+Os campos anteriores e o schema JSON v1 são preservados.
+
+Para aceite, compare um ciclo ordenado em ensaio isolado com a ação real e verifique
+a continuidade do serviço. Complete descreve apenas os sinais recebidos: não prova
+lock efetivo ou confiabilidade de LockedHint. O watcher não persiste intervalos,
+histórico do stream ou duração dos ciclos. Falta de ciclo não muda, por si só,
+o código de saída de disponibilidade do doctor.
 Sem par de suspensão confirmado, um gap continua UNKNOWN.
 
 Registre somente disponibilidade, contagens, duração aproximada e limite observado.

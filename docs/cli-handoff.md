@@ -28,6 +28,19 @@ D-Bus de sessão ou identificação da sessão gráfica. Lock/unlock, sleep/resu
 monitores, precisão de foco, dois perfis e autostart real continuam pendentes.
 Não iniciar EP-03 nem declarar C0 atingido antes desses ensaios.
 
+Continuação local do EP-02: ADR-008 e resumo ordenado de ciclos do watcher,
+duplicatas/sinais sem par e falha de conexão explícita. Checks Compose/Python 3.11
+com 38 testes e build passaram; imagens dev/runtime reconstruídas. Logind sem
+eventos durante 2s confirma somente conexão, com cycle_status=no-events.
+Incremento ainda não publicado/validado na CI. Próximo passo: executar o launcher
+no terminal GNOME/X11 e comparar ciclos com ações manuais conforme o protocolo.
+
+Correção local após feedback do terminal: XDG_SESSION_ID opcional conforme
+ADR-009. O launcher preserva cookie/sockets e o doctor informa LockedHint
+indisponível quando falta o ID, sem buscar outra sessão. 40 testes/checks/build
+passaram em Compose/Python 3.11; override aceita ID vazio. Novo ensaio do usuário,
+publicação e CI remota deste incremento ainda pendentes.
+
 ## Primeiro trabalho
 
 Leia `AGENTS.md`, `docs/product-spec.md` e `docs/system-design.md`. Comece pela issue #1 (EP-01), detalhando contratos, fixtures e estrutura mínima. Em seguida faça a issue #2 (EP-02) no Debian 12/GNOME/X11 real. Registre disponibilidade e custo das fontes antes de implementar coleta contínua.

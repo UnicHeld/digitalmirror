@@ -33,6 +33,8 @@ GNOME/X11 continuam sendo a sessão observada do host; não iniciar desktop virt
 - Valores de sessão vêm do terminal GNOME/X11 do usuário, sem hardcode de DISPLAY
   ou caminho de autoridade. O launcher recusa sessão ausente, arquivos/sockets
   inexistentes e Docker remoto para integração gráfica; não cria diretórios substitutos.
+  XDG_SESSION_ID é opcional conforme ADR-009: ausência não bloqueia X11/GNOME;
+  LockedHint fica indisponível no doctor, sem selecionar outra sessão.
 - Histórico de medições diretas é preservado como evidência anterior à migração.
   Novas medições precisam identificar contêiner e incluir overhead Docker separadamente
   no EP-09. Container saudável não prova autostart, foco ou eventos reais.

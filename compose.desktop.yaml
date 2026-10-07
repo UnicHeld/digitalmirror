@@ -6,7 +6,7 @@ services:
     environment:
       DISPLAY: "${DISPLAY:?Execute a partir do terminal da sessão X11}"
       XDG_SESSION_TYPE: "${XDG_SESSION_TYPE:?Sessão X11 obrigatória}"
-      XDG_SESSION_ID: "${XDG_SESSION_ID:?Identificação da sessão obrigatória}"
+      XDG_SESSION_ID: "${XDG_SESSION_ID:-}"
       XDG_CURRENT_DESKTOP: "${XDG_CURRENT_DESKTOP:-}"
       XDG_RUNTIME_DIR: /run/host/user
       DBUS_SESSION_BUS_ADDRESS: unix:path=/run/host/user/bus

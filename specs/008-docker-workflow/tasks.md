@@ -8,6 +8,7 @@
 - [x] Build das imagens e validação de Compose executados em Python 3.11.
 - [x] Formatter/lint/tipos/32 testes/build e CLI validados nos contêineres.
 - [x] Relatório registra limitações gráficas e overhead/medições ainda pendentes.
+- [x] ADR-009: XDG_SESSION_ID opcional, mantendo preflight e fallback seguro de LockedHint; regressões e Compose validados.
 
 [CI remota](https://github.com/UnicHeld/digitalmirror/actions/runs/37550585612)
 validou imagens dev/runtime, 32 testes e build sdist/wheel em Python 3.11/3.13.
