@@ -47,14 +47,30 @@ DISPLAY, paths ou propriedades brutas na saída; divergências múltiplas são
 reportadas juntas. Requisitos RF-04/16 e RNF-09, extensão do ADR-010.
 
 Given candidato User.Display com Id/UID/Type/Class/Remote confirmados e
-Session.Display vazio, Then logind-lock continua indisponível. Prosseguir apenas
+Session.Display vazio, Then aplicar associação adicional do ADR-011; falha mantém
+logind-lock indisponível. Prosseguir então
 com ensaios independentes GNOME e PrepareForSleep conforme decisão ADR-010 de
 07/10/2026; não inferir associação nem alterar a sessão. O aceite do fallback
 GNOME exige ação manual correlacionada a ciclo ordenado e consultas true/false,
 mais revalidação na retomada/fim. Comparação unavailable e diagnóstico degraded
 são esperados nessa condição; LockedHint e concordância permanecem não validados.
 
+Given Display exatamente vazio com os cinco outros critérios válidos, Then aceitar
+o mesmo candidato somente com VT positivo igual ao XFree86_VT da raiz, seat0
+canônico, Active=true e Seat.ActiveSession igual ao ID/path originais. Revalidar
+as nove propriedades, VT X11 e ActiveSession antes de LockedHint. Display não
+vazio divergente/inválido nunca usa essa alternativa. Erro/tipo inválido/mudança
+rejeita, sem reutilizar sucesso anterior ou escolher outro candidato.
+Emitir somente booleans/enum de associação, preservando identity_display_matches=
+false/empty no caminho VT; não fabricar metadado. Leituras sequenciais não são
+prova atômica; ensaios reais de lock/retomada e custo continuam necessários.
+
 CLI retorna JSON versionado com fontes, motivos, fallback e medições agregadas.
+Conforme ADR-005, detalhes XRandR incluem `focused_window_on_primary` somente
+com janela atribuída e exatamente um monitor principal. true/false distinguem
+principal/outro monitor; campo ausente mantém classificação desconhecida.
+Sem nomes/coordenadas/IDs na saída, novas consultas ou mudança de crédito de foco.
+Relato manual de foco estável verifica atribuição; não valida precisão de transições.
 `--watch-seconds` (0–900; padrão 0) observa ActiveChanged e PrepareForSleep em
 streams limitados, mostrando somente contagens de true/false e status de conexão.
 Conforme ADR-008, cada fonte inclui `cycles` com `complete_count`, `pending_start`,

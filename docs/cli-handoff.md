@@ -6,6 +6,13 @@ EP-02 continua In Progress, C0 pendente e EP-03 Backlog. Esta retomada sucede
 `fa3b7bb` (handoff), com implementação anterior `086e553`, e inclui instrumentação
 sanitizada e evidências dos ensaios reais de bloqueio e suspensão/retomada.
 
+**Ponto atual:** ADR-011 implementado e doctor real recebido às 22:28 local de
+07/10: onze fontes read-ok, associação por VT e LockedHint=false, com Display
+ainda vazio. Próximas validações são transições LockedHint em lock/retomada e
+polling desse caminho; depois precisão temporal de foco, perfis e ciclo de login.
+Formatter/lint/mypy, 67 testes e build via Compose/Python 3.11 aprovados novamente
+antes da publicação. Histórico e detalhes dos ensaios preservados abaixo.
+
 `logind-lock.details` agora inclui `candidate_source` mesmo na falha e, após parse
 tipado completo, seis booleans `identity_*` e `session_display_status`.
 `process_uid_is_root`/`host_uid_matches_process_uid` mostram a relação entre UID
@@ -30,8 +37,10 @@ retornaram degraded/código 1 esperado, com candidate_source=not-attempted.
 O doctor gráfico instrumentado foi recebido depois desses checks, conforme abaixo;
 watchers de lock e suspensão/retomada recebidos e correlacionados aos relatos.
 Checks via Compose/Python 3.11 repetidos antes da publicação: formatter, lint,
-mypy, 57 testes e build aprovados. CI remota deste incremento deve ser conferida
-no GitHub Actions após o push; não confundir checks locais com CI remota.
+mypy, 57 testes e build aprovados. Incremento publicado em `9665660`; a
+[CI remota](https://github.com/UnicHeld/digitalmirror/actions/runs/37703204277)
+passou em Python 3.11/3.13, com imagens dev/desktop, checks e build. Issue #2 e
+Project atualizados com evidências e pendências; EP-02 In Progress, EP-03 Backlog.
 
 ### Causa identificada e próximo ensaio
 
@@ -129,6 +138,91 @@ Host xrandr --listmonitors mostrou dois monitores definidos. Doctor consulta
 em momento/configuração iguais antes de concluir falha do contêiner. wlr-randr
 ausente não exige nova dependência para o alvo X11. Evidência complementar do
 host registrada sanitizada no relatório, sem IDs/nomes ou saída bruta versionada.
+
+### Próximo ensaio preparado — foco e monitores
+
+Comparação --listmonitors e --listactivemonitors no host e via desktop Compose
+recebida em 07/10, aproximadamente 20:41 local. As quatro consultas retornaram
+dois monitores; um principal. Usuário relata navegador na tela integrada e
+terminal em foco na tela externa; saída compatível com layout estendido.
+Nenhuma divergência host/contêiner nesse ensaio. A causa da contagem anterior
+de um monitor continua desconhecida; não atribuir à opção active ou a Docker.
+Procedimento em
+[spike-ep02.md](spike-ep02.md#comparar-monitores-no-host-e-no-contêiner).
+Polling recebido: relatório das 23:46:43 UTC de 07/10 (20:46:43 local), 12 amostras/
+5s. Dez fontes read-ok em 12/12; logind-lock indisponível 12/12 por Display vazio.
+Último snapshot com dois monitores, um principal, janela atribuída e GNOME=false.
+Janela 55,208928s, latência p95 236,064ms, atraso p95 0,332ms e CPU 1,542% de um
+núcleo, acima da referência de 1%. RSS próprio/maior filho 19.104 KiB cada.
+Não comprova topologia constante, identidade do app ou precisão das transições;
+não atribuir aumento de CPU ao incremento sem comparar cenários equivalentes.
+
+O doctor publicado não registra sequência de apps ou timestamps de mudanças e
+não identifica se a janela atribuída estava no monitor principal/secundário.
+Extensão local do ADR-005 acrescenta focused_window_on_primary somente com
+atribuição e exatamente um principal, sem novas consultas/identificadores.
+Ausência de geometria/foco/interseção ou principal ambíguo omite o campo;
+não interpretar ausência como false. Duas leituras reais recebidas às 23:56:12
+e 23:56:43 UTC (20:56 local): focused_window_on_primary=false e true nos ensaios
+secundário/principal respectivamente. Ambas com count=2, primary_count=1 e
+focused_window_assigned=true; dez fontes read-ok, GNOME=false e somente logind-lock
+indisponível por Display vazio. Correspondem aos cenários solicitados; classe/ID
+do app não são expostos, portanto identidade do aplicativo não está comprovada.
+Precisão de transições exige instrumentação finita adicional antes do ensaio de foco;
+não declarar RNF-04 atendido pela latência de consulta ou por relato de alternância.
+Ambiente do agente continua sem sessão gráfica herdada; ensaio real depende
+da execução do usuário no terminal GNOME/X11. Extensão local validada via Compose/
+Python 3.11: formatter, lint, mypy, 59 testes e build aprovados; imagens dev/desktop
+reconstruídas. Sem commit/push ou CI remota deste incremento. Verificação de
+atribuição em snapshots concluída para esses cenários. Próxima fatia: ensaio
+finito de mudanças de foco, com referência temporal explícita, depois perfis e
+login/logout/instância única. Não repetir doctor isolado para medir erro de foco.
+Os 31,161%/26,518% de CPU dessas amostras únicas não substituem o polling de
+1,542% ou validam RNF de consumo. Código 1/degraded continua esperado por logind.
+
+### Retomada prioritária — Session.Display e terminal virtual
+
+Usuário pediu aprofundamento do valor vazio. Investigação de 07/10 confirmou no
+host GDM 43.0-3 e candidato User.Display ativo, x11/user/local, serviço gdm-password,
+Display vazio e VT positivo. Não enumerou sessões ou recuperou ambiente de processos.
+Fontes do GDM 43/empacotamento Debian e pam_systemd sustentam que NEW_VT registra
+sessão via PAM antes de o launcher iniciar Xorg; RegisterDisplay posterior do GDM
+não é SetDisplay do logind. Explicação forte, sem trace do login original: não
+atribuir a Docker nem tratar automaticamente como configuração quebrada.
+Referências e limitações na seção de investigação upstream do relatório.
+
+Próximo passo antes de retomar foco: comparar XFree86_VT da raiz X11 no host e
+desktop Compose com VTNr do mesmo candidato User.Display. Nome da propriedade
+sem underscore. Agente sem sessão gráfica herdada, leitura X11 real ainda pendente.
+Se coincidir, avaliar associação passiva adicional com seat/atividade/identidade e
+revalidação, documentando ADR/spec antes de mudar o critério. Nada autoriza usar
+VT positivo isolado, escolher outra sessão ou preencher Display via SetDisplay.
+Essa etapa foi respondida pelo usuário: em consulta aproximadamente às 21:58
+local, VTNr do candidato e XFree86_VT da raiz no host/Compose coincidiram, com
+Display vazio e serviço GDM. Sem número/ID pessoal versionado.
+
+Implementação local do ADR-011 (documentado antes do código) permite o mesmo
+candidato só com Display vazio, cinco critérios válidos, VT positivo igual,
+seat0 canônico e ativo, Seat.ActiveSession correspondente e releituras consistentes
+das nove propriedades/VT X11/ActiveSession. Display preenchido errado não usa VT.
+diagnostics.session_association_source=x11-vt identifica sucesso com Display ainda
+false/empty; falhas preservam GNOME e nunca leem LockedHint/reutilizam candidato.
+Checks via Compose/Python 3.11 aprovados: formatter, lint, mypy, 67 testes e build.
+Imagens dev/desktop reconstruídas; checks repetidos na nova imagem dev também
+aprovados (67 testes/build). Runtime sem mounts gráficos retornou degraded/código
+1 esperado, associação not-validated e VT não tentado; não valida fontes reais.
+Doctor real dessa implementação recebido: observed_at=01:28:39.879591 UTC de
+08/10 (22:28:39 local de 07/10), onze fontes read-ok e status available. logind-lock
+session_validated/resolved_from_user_display=true, associação x11-vt, critérios
+VT/seat/atividade/releituras true; identity_display_matches=false e categoria empty
+preservadas. LockedHint=false e GNOME=false coincidem nessa consulta sequencial.
+Dois monitores, principal único e janela atribuída ao secundário. Uma amostra de
+224,139ms não mede consumo médio de polling ou confiabilidade de transições.
+Próximo passo: watcher de lock 120s e retomada separados para esse novo caminho,
+depois polling para custo das seis consultas extras. Ensaios GNOME anteriores
+continuam válidos; não validaram LockedHint, então não encerram essas pendências.
+CI remota deste incremento deve ser conferida após a publicação. EP-02 permanece
+In Progress, C0 pendente e EP-03 Backlog.
 
 ## Histórico — parada em 06/10/2026, 23:17 local
 

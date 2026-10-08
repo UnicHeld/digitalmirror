@@ -396,6 +396,8 @@ def collect_checks(env: Mapping[str, str], runner: Runner = run_readonly) -> lis
                     "primary_count": sum(m[0] for m in monitors),
                     "focused_window_assigned": index is not None,
                 }
+                if index is not None and details["primary_count"] == 1:
+                    details["focused_window_on_primary"] = monitors[index][0]
             except ValueError:
                 result = CommandResult(reason="invalid-response")
         checks.append(

@@ -678,3 +678,267 @@ pendentes para essa fonte. Fallback GNOME e aceite anterior preservados.
 
 Atualizados relatório, handoff e checklist, sem código ou mudança de critérios.
 git diff --check executado; testes/build não repetidos. Sem commit/push ou nova CI.
+
+## Comparação de monitores host/Compose — 07/10/2026, aproximadamente 20:41 local
+
+Usuário executou consultas equivalentes no terminal GNOME/X11 e no serviço
+desktop via launcher. Evidência sanitizada; sem nomes, dimensões, coordenadas
+ou JSON bruto versionados.
+
+| Consulta | Host | Desktop Compose |
+| --- | --- | --- |
+| xrandr --listmonitors | 2 monitores | 2 monitores |
+| xrandr --listactivemonitors | 2 monitores | 2 monitores |
+
+As quatro respostas indicam um monitor principal e dois monitores distintos.
+Nenhum erro de consulta informado. Usuário relata navegador na tela integrada
+e terminal na tela externa, sendo o terminal a janela em foco durante os comandos.
+Saída compatível com layout estendido; não persistir domínio/aba aberta.
+
+Aceite limitado: o contêiner acessou os dois monitores também pela consulta
+usada no doctor, sem discrepância em relação ao host nesse ensaio. Isso não
+explica a contagem anterior de um monitor, pois configuração/instante anteriores
+não foram reproduzidos. Não atribuir a diferença à opção active, parser ou Docker.
+
+XRandR não consultou a janela focada nesse ensaio; sua identificação vem do relato.
+Não comprova leitura de classe, atribuição ao monitor secundário, exclusão de tempo
+do navegador sem foco ou erro temporal das transições. Próximo passo: polling
+de 12 amostras/5s com terminal em foco e configuração preservada. Instrumentação
+finita ainda será necessária para verificar sequência de foco/monitor antes de C0.
+
+Atualizados relatório, handoff e checklist; somente documentação. git diff --check
+executado; checks Python/build não repetidos. Nenhum novo aceite RNF ou C0.
+
+## Polling com duas telas — 07/10/2026, 20:46 local
+
+Resultado fornecido pelo usuário de doctor via desktop Compose, 12 amostras
+a cada 5s. observed_at=23:46:43.460681 UTC (20:46:43 local) identifica o relatório
+ao fim do polling, sem determinar o início pelo prompt anterior do terminal.
+Ensaio solicitado com terminal em foco na tela externa e configuração preservada;
+o JSON não contém identidade do aplicativo ou sequência de foco para comprovar
+essas condições de forma independente. Sem JSON bruto versionado.
+
+Dez fontes read-ok em 12/12 amostras, incluindo foco/classe/PID/workspace/
+geometria/idle X11, monitores, GNOME, interface de suspensão e alvo gráfico.
+Somente logind-lock indisponível 12/12 por session-identity-mismatch:
+Id/UID/Type/Class/Remote confirmados no último snapshot, Session.Display vazio.
+Degraded esperado por essa fonte; não representa falha das leituras X11.
+
+Último snapshot: dois monitores, um principal, janela focada atribuída a algum
+monitor e GNOME=false. A contagem de disponibilidade não comprova topologia ou
+estado de lock constantes durante todo o ensaio; o snapshot não diz principal/
+secundário. A precisão das transições de app continua não medida.
+
+| Medição | Resultado | Limite de interpretação |
+| --- | --- | --- |
+| Janela | 55,208928s | Polling finito, sem soak |
+| Latência p95 | 236,064ms | Custo da consulta, não erro de foco |
+| Atraso p95 de início | 0,332ms | Abaixo de 1s nesta janela |
+| CPU própria / filhos | 0,141647s / 0,709578s | Cerca de 83,36% da CPU veio de subprocessos |
+| CPU média de um núcleo | 1,542% | Acima da referência RNF-03 de 1% em 0,542 ponto percentual |
+| RSS máximo próprio / maior filho | 19.104 KiB / 19.104 KiB | 18,65625 MiB cada; não soma simultânea |
+
+A medição histórica de 1,137% permanece preservada. As janelas diferem e não
+comprovam regressão causal do incremento nem permitem atribuir custo a uma
+consulta específica. Não declarar RNF-03 atendido; otimização de subprocessos/
+adaptadores deve considerar medições representativas, sem excluir filhos ou
+diminuir frequência para produzir aceite. Startup/daemon Docker externos à janela.
+
+Próxima fatia: atributo sanitizado de atribuição ao principal (ADR-005), usando
+dados já consultados, antes de ensaios estáveis nas duas telas. Não altera crédito
+de foco nem valida browser em segundo plano ou precisão temporal. C0 pendente.
+
+## Extensão para verificar atribuição — 07/10/2026
+
+Implementado focused_window_on_primary em detalhes XRandR conforme extensão do
+ADR-005 e spec/plan 002, documentadas antes do código. Reutiliza geometria e
+monitores já consultados; true/false somente com atribuição e exatamente um
+principal. Sem janela, geometria válida, interseção ou principal único, omitir
+campo. Não confundir desconhecido com monitor secundário. Sem identificadores,
+novas consultas, dependências ou mudança de crédito de foco.
+
+Formatter executado; formatter check, lint, mypy, 59 testes e build sdist/wheel
+aprovados via Compose/Python 3.11. Dois testes novos cobrem maior interseção,
+desempate, principal/secundário, ausência/falha de geometria/foco, principal
+ausente/ambíguo, recuperação e privacidade. Imagens dev/desktop reconstruídas.
+git diff --check aprovado. Sem ensaio gráfico novo, commit/push ou CI remota.
+
+Protocolo preparado para duas leituras estáveis: terminal no secundário e janela
+no principal, selecionada manualmente durante atraso de 10s antes do launcher.
+Resultados reais pendentes; não declarar atribuição validada, erro de foco medido
+ou RNF/C0 atendidos pelos testes sintéticos.
+
+## Atribuição em duas leituras reais — 07/10/2026, 20:56 local
+
+Usuário forneceu resultados de doctor simples e de doctor após atraso de 10s,
+conforme protocolo de foco estável nas telas secundária/principal. Saída
+sanitizada, sem nomes de monitores, conteúdo de janela ou JSON bruto versionados.
+
+| Snapshot | Monitores / principais | Janela atribuída | focused_window_on_primary |
+| --- | --- | --- | --- |
+| 23:56:12.362131 UTC, ensaio secundário | 2 / 1 | true | false |
+| 23:56:43.446140 UTC, ensaio principal | 2 / 1 | true | true |
+
+Ambos com dez fontes read-ok, incluindo classe/PID/workspace/geometria/idle X11,
+GNOME=false, interface logind-sleep e alvo gráfico. Só logind-lock indisponível
+por session-identity-mismatch; candidato user-display confirma Id/UID/Type/Class/
+Remote, mas Session.Display vazio impede associação. Degraded/código 1 continuam
+esperados; não indicam falha de leitura dos monitores nesse ensaio.
+
+Aceite limitado: novo booleano presente e correspondência entre atribuição
+secundário/principal e cenários solicitados em duas consultas reais. O JSON não
+identifica aplicativo; classe read-ok confirma disponibilidade, sem revelar que
+era terminal/navegador. Não mede continuidade de foco, instante manual da troca,
+erro de detecção, crédito de tempo de app/aba ou casos de empate no host.
+
+Janelas individuais 0,194738s e 0,209982s, CPU 31,161% e 26,518% de um núcleo;
+latências 0,194610s e 0,209861s. Sem esperas de polling, não são CPU média de
+coleta e não substituem a medição de 1,542% em 12 amostras. Os cerca de 31s entre
+timestamps não medem latência de mudança de foco; incluem execução e ações manuais.
+RSS próprio/maior filho 19.120 KiB e 19.204 KiB, sem soma simultânea ou soak.
+
+Próxima fatia: instrumentação finita de mudanças de foco com referência temporal
+explícita, antes do aceite RNF-04; perfis, login/logout/instância única e decisão
+final de adaptadores permanecem pendentes. C0 não atingido.
+Nesta confirmação alterados apenas relatório, handoff e checklist;
+git diff --check executado. Checks/build de 59 testes pertencem à implementação
+da extensão anterior; não repetidos por documentação. Sem nova CI ou commit/push.
+
+## Investigação upstream de Session.Display — 07/10/2026
+
+Usuário solicitou aprofundamento do valor vazio. Leitura passiva no host pelo
+agente confirmou GDM 43.0-3, systemd/libpam-systemd 252.39 e Xorg 21.1.7 do Debian
+12; gerenciador padrão GDM. Sem leitura de ambiente de outros processos ou
+modificação de configuração/login. Essa investigação de pacotes/host não é
+medição via Docker nem ensaio de desempenho.
+
+Candidato obtido somente por User.Display do UID local, sem listagem/ID fixo.
+Consulta dirigida no host, com saída reduzida a booleans, confirmou Display vazio,
+Service=gdm-password, Type=x11, Class=user, Remote=false, sessão ativa/state active,
+seat local padrão e VT positivo. Sem ID/UID/número de VT/paths pessoais versionados.
+Logo, o valor vazio também existe diretamente no logind do host; não é criado
+pela tradução de UID ou pelos mounts do contêiner. Associação ao servidor X11
+observado continua não comprovada pelo critério atual.
+
+Inspeção de fontes primárias compatíveis com as versões instaladas:
+
+- [GDM 43, gdm-session.c](https://github.com/GNOME/gdm/blob/43.0/daemon/gdm-session.c):
+  com user-display-server habilitado, sessões no seat padrão usam NEW_VT e launcher
+  gdm-x-session. A opção é true por padrão; regras Debian 43.0-3 não a desabilitam.
+- [GDM 43, worker](https://github.com/GNOME/gdm/blob/43.0/daemon/gdm-session-worker.c):
+  set_up_for_new_vt informa PAM_TTY/XDG_VTNR antes de pam_open_session. PAM_XDISPLAY
+  é informado em set_up_for_current_vt, usado no caminho REUSE_VT, não nesse novo VT.
+- [pam_systemd 252.39](https://github.com/systemd/systemd-stable/blob/v252.39/src/login/pam_systemd.c):
+  lê PAM_XDISPLAY e o envia em CreateSession; DISPLAY do terminal não preenche
+  automaticamente essa propriedade numa sessão já registrada.
+- [GDM 43, launcher](https://github.com/GNOME/gdm/blob/43.0/daemon/gdm-x-session.c):
+  inicia Xorg, obtém nome do display e o informa a RegisterDisplay do GDM.
+  [Handler GDM](https://github.com/GNOME/gdm/blob/43.0/daemon/gdm-manager.c) atualiza
+  objetos internos display/session; esse handler não chama logind SetDisplay.
+
+Inferência fortemente sustentada: a sessão pode ser registrada antes de existir
+o nome do display X11, mantendo Session.Display vazio nesse caminho normal GDM.
+Não classificar automaticamente como configuração quebrada, sessão incorreta ou
+bug Docker. Não foi observado o trace do login original; o caminho exato permanece
+inferência baseada em fontes/configuração do pacote e metadados atuais.
+As telas/fontes X11 podem funcionar normalmente com esse metadado ausente.
+
+Alternativa passiva a investigar: o
+[Xorg 21.1.7](https://gitlab.freedesktop.org/xorg/xserver/-/blob/xorg-server-21.1.7/hw/xfree86/common/xf86Init.c)
+publica XFree86_VT (INTEGER) na janela raiz quando há VT. O nome não tem underscore
+inicial. Comparar com VTNr do mesmo candidato User.Display no host e no desktop
+Compose. Ainda faltam valores da sessão gráfica real: agente não herdou DISPLAY/
+cookie e não recupera credenciais de processos. VT positivo no logind, sozinho,
+não identifica qual servidor X11 o contêiner observa.
+
+Se houver correspondência, avaliar critério adicional com tipos/UID/localidade,
+seat/atividade e revalidação; coincidência isolada não libera LockedHint. Mudança
+do critério exige ADR/spec antes do código e ensaios de falhas, bloqueio/retomada.
+Não chamar SetDisplay/TakeControl, exportar ID ou alterar login para preencher
+o metadado. Critério atual e indisponibilidade logind preservados nesta investigação.
+
+Algumas páginas de fontes não foram acessíveis via navegador; código obtido
+por HTTP dos repositórios oficiais GNOME/systemd/Xorg e patches/regras do pacote
+Debian, sem instalar/executar esses arquivos. Atualizados relatório, handoff,
+protocolo e checklist; git diff --check executado. Sem checks Python/build novos.
+
+## Evidência de VT e implementação ADR-011 — 07/10/2026
+
+Usuário forneceu consultas de aproximadamente 21:58 local: VTNr do candidato
+User.Display igual a XFree86_VT no host e no desktop Compose. Session.Display
+vazio e serviço gdm-password; sem número de VT, ID ou saída bruta versionados.
+Confirma correspondência nesse instante entre sessão e raiz do servidor X11
+observado. Não comprova sozinho seat/atividade em todos os momentos ou LockedHint.
+
+ADR-011/spec/plan documentados antes de implementar associação alternativa
+exclusivamente para Display exatamente vazio e os cinco outros critérios válidos.
+Manter o mesmo candidato. Exigir VT positivo coincidente, seat0 canônico, Active=
+true e Seat.ActiveSession igual ao ID/path. Reler as nove propriedades da sessão,
+VT da raiz e ActiveSession antes de liberar LockedHint. Display não vazio errado
+sempre rejeita; erro/releitura diferente não reutiliza sucesso anterior.
+
+Saída aditiva v1 com enum de associação e booleans, sem valores pessoais:
+session_association_source=x11-vt identifica sucesso; identity_display_matches
+continua false e categoria empty, sem fabricar Session.Display. Caminho original
+com nome correspondente usa session-display e não acrescenta consultas de VT.
+Seat não padrão, Xwayland/Wayland/remoto ou propriedade Xorg ausente não atendem
+essa associação. Leituras sequenciais reduzem corridas mas não são atômicas.
+
+Formatter/lint/mypy, 67 testes e build sdist/wheel aprovados via Compose/Python
+3.11. Oito testes novos cobrem seleção explícita/primária, DISPLAY não vazio,
+identidade incompatível, VT/seat/atividade inválidos, outro ActiveSession, falhas
+nas seis etapas adicionais, mudanças nas releituras, privacidade e não reutilização.
+Teste de categoria empty ajustado para associação VT inválida, conforme contrato.
+Imagens dev/desktop reconstruídas; formatter/lint/mypy, 67 testes e build
+repetidos na nova imagem dev, aprovados. CLI na imagem runtime sem mounts gráficos
+retornou degraded/código 1 esperado, associação not-validated e VT não tentado.
+Esse smoke verifica execução isolada, sem associação ou fontes reais.
+Sem doctor gráfico da implementação, nova CI ou commit/push. git diff --check aprovado.
+
+Próximo ensaio: doctor simples reconstruído e objeto logind-lock; se disponível,
+watcher lock de 120s e retomada separados. Não afirmar comparação/confiabilidade
+LockedHint antes das ações manuais; falha de seat/atividade durante transição
+mantém indisponível e fallback GNOME. Depois medir polling novamente: seis
+consultas extras podem aumentar CPU já acima da referência (1,542% histórico).
+Demais validações de foco, perfis, login/logout e C0 permanecem pendentes.
+
+## Doctor real com associação por VT — 07/10/2026, 22:28 local
+
+Usuário forneceu saída do desktop Compose reconstruído com observed_at=
+2026-10-08T01:28:39.879591Z (07/10 às 22:28:39 local). Usar esse timestamp do
+JSON, não o horário anterior do prompt. Uma amostra; status available e onze
+fontes read-ok, incluindo logind-lock pela primeira vez no doctor dessa sessão.
+
+Seleção user-display, session_validated/resolved_from_user_display=true e
+session_association_source=x11-vt. Id/UID/Type/Class/Remote e critérios de VT
+positivo, seat suportado, sessão ativa, VT correspondente, ActiveSession e
+releituras consistentes confirmados. Session.Display continua empty e
+identity_display_matches=false: nenhum metadado foi preenchido ou fabricado.
+Relação entre UID interno rootless e UID do host permanece coerente com launcher;
+sem valores pessoais ou JSON bruto versionados.
+
+LockedHint=false e GetActive=false nessa consulta sequencial confirmam leitura
+desbloqueada e concordância pontual. Não há watcher, snapshot bloqueado ou
+retomada nesta saída. Os ensaios manuais anteriores validaram fallback GNOME e
+entrega PrepareForSleep; não validaram LockedHint pela associação nova.
+
+XRandR informou dois monitores e principal único, janela atribuída e
+focused_window_on_primary=false. Demais fontes X11, interface de suspensão e
+alvo gráfico read-ok. Sem identidade de aplicativo ou medida de erro temporal.
+
+Janela 0,224139s; latência 0,224018s; atraso 0,069ms. CPU própria 0,012196s e
+filhos 0,060495s; 32,431% de um núcleo nessa consulta sem espera, não consumo
+médio de polling. RSS próprio e maior filho 19.132 KiB, sem soma simultânea.
+Não substitui medição histórica de 1,542% ou soak de 8h.
+
+Associação e leitura reais aceitas no escopo dessa amostra. Pendentes: watcher
+de bloqueio/desbloqueio e retomada com LockedHint, incluindo falhas de atividade/
+VT/seat; polling com consultas adicionais; precisão temporal de foco; perfis com
+extensão; login/logout/instância única e decisão final de adaptadores. EP-02
+In Progress, C0 pendente e EP-03 Backlog. A lista pending_validation da CLI é
+estática e não substitui este checklist de evidências.
+
+Antes da publicação, checks completos repetidos via Compose/Python 3.11:
+formatter, lint, mypy, 67 testes e build sdist/wheel aprovados; git diff --check
+aprovado. Imagens dev/desktop já reconstruídas e validadas conforme seção anterior.
+CI remota deste incremento deve ser conferida separadamente após o push.

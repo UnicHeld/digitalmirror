@@ -12,7 +12,7 @@
 - [x] US-02.2: registrar entrega real de dois ciclos GNOME no watcher de 120s durante ensaio manual Windows+L, sem inferir quantidade de bloqueios efetivos.
 - [x] US-02.2: suspensão/retomada voluntárias no GNOME com um par PrepareForSleep ordenado e saída final após retorno, informados pelo usuário.
 - [x] US-02.2: correlacionar bloqueio manual ao ciclo GNOME e revalidar fontes após retomada, pelo fallback documentado no ADR-010.
-- [ ] US-02.2 / C0: registrar na decisão final de adaptadores que a comparação GetActive/LockedHint continua indisponível por Session.Display vazio.
+- [ ] US-02.2 / C0: registrar na decisão final de adaptadores as limitações da associação ADR-011 e a confiabilidade observada de GetActive/LockedHint; leitura desbloqueada confirmada, transições ainda pendentes.
 - [x] US-02.2/03: implementar resolução validada da sessão e UID real no Compose (ADR-010).
 - [x] US-02.2: implementar contagens de lock durante watcher e revalidação após par de retomada/fim.
 - [x] US-02.2 / RNF-09: testar validação de identidade, falhas, divergências e recuperação sanitizadas via Compose.
@@ -26,8 +26,19 @@
 - [x] US-02.2: esclarecer atalho informado; usuário corrigiu para Windows+L e confirmou bloqueio manual correlacionado ao único ciclo GNOME.
 - [x] US-02.2: validar fallback GNOME com um bloqueio manual correlacionado a um ciclo e consultas true/false; suspensão/retomada com revalidações e recuperação final, sem alegar comparação LockedHint.
 - [x] US-02.2: registrar evidência complementar do host: LockedHint acessível por candidato indicado por User.Display e self sem associação; não substituir o critério DISPLAY nem fixar ID.
-- [ ] US-02.2: investigar associação passiva alternativa ao X11 antes de usar LockedHint com Session.Display vazio; documentar ADR/spec e validar transições se uma alternativa for comprovada.
+- [x] US-02.2: investigar associação passiva alternativa ao X11 antes de usar LockedHint com Session.Display vazio; documentar ADR-011/spec com identidade, VT/seat/atividade e releituras consistentes.
+- [x] US-02.2: aprofundar origem upstream do Display vazio: confirmado também no host e caminho NEW_VT do GDM 43/PAM identificado em fontes primárias como explicação fortemente sustentada, sem trace do login original; não alterar critério.
+- [x] US-02.2: receber coincidência entre XFree86_VT da raiz X11 no host/Compose e VTNr do mesmo candidato User.Display; evidência aproximadamente às 21:58 local de 07/10, sem números pessoais versionados.
+- [x] US-02.2 / RNF-09: documentar ADR-011/spec antes do código e implementar associação por VT exclusivamente para Display vazio com identidade/seat/atividade/releituras; formatter/lint/mypy, 67 testes e build via Compose aprovados.
+- [x] US-02.2: receber doctor real reconstruído ADR-011: onze fontes read-ok, associação x11-vt validada e LockedHint=false coincidente com GNOME=false na leitura sequencial; Session.Display permanece vazio.
+- [ ] US-02.2: validar leitura/comparação LockedHint em bloqueio/desbloqueio e retomada com ADR-011, preservando possíveis falhas ao trocar VT/seat.
+- [ ] US-02.3 / RNF-03: medir polling com associação por VT e seis consultas adicionais; não declarar consumo atendido ou comparar diretamente amostras únicas com o polling de 1,542%.
 - [ ] US-02.3: polling com fontes gráficas saudáveis e precisão de transição medida.
+- [x] US-02.3 / RNF-03/04: registrar polling novo de 12 amostras/5s, dez fontes read-ok 12/12, dois monitores na última leitura, atraso p95 0,332ms e CPU 1,542% acima da referência de 1%; sem aceite de erro de foco ou soak.
+- [x] US-02.3 / RF-09: receber duas leituras reais do booleano de atribuição ao principal: false no ensaio secundário e true no principal, ambos com dois monitores e janela atribuída; snapshots correspondem aos cenários solicitados, sem comprovar identidade do app ou erro temporal.
+- [ ] US-02.3 / RNF-04: instrumentar ensaio finito de transições de foco com referência temporal explícita; consultas isoladas e latência do doctor não medem atraso de detecção.
+- [x] US-02.3 / RF-09 / RNF-09: implementar focused_window_on_primary com atribuição e principal único, sem novas consultas; testes de interseção/desempate, ausência/falha de geometria/foco, principal ausente/ambíguo e privacidade. Formatter/lint/mypy, 59 testes e build via Compose aprovados; imagens dev/desktop reconstruídas.
+- [x] US-02.3 / RF-09: comparar consultas XRandR equivalentes no host e desktop Compose; --listmonitors e --listactivemonitors retornaram dois monitores nos dois ambientes, com terminal em foco na tela externa conforme relato; não valida atribuição ou precisão de foco.
 - [ ] US-02.3: confirmar ambiente gráfico e início único após login/logout reais.
 - [ ] US-02.4: prova real com duas janelas/perfis e metadados da extensão.
 - [ ] C0: decidir adaptadores finais a partir das evidências; liberar EP-03.

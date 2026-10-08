@@ -21,7 +21,7 @@ EP-01 contém contratos/fixtures e EP-02 tem CLI de diagnóstico; coleta contín
 - Preservar usuário do host: UID/GID iguais em Docker rootful, 0 internos em rootless (mapeiam ao usuário sem privilégios). Usar os launchers para detectar o modo. Sem privileged, xhost +, Docker socket ou home inteiro montado. Acesso gráfico via mounts explícitos read-only de sockets/Xauthority; não criar diretórios no lugar de sockets ausentes.
 - Runtime desktop usa rede host Linux para preservar API somente em `127.0.0.1:8765`; nenhum bind `0.0.0.0`. Em rootless, API exige Engine 29.5+ e validação EP-07; versões anteriores atendem checks/doctor por sockets. Dev não recebe sockets e executa checks sem rede.
 - Preservar evidências históricas e identificar novas medições em Docker. Ensaios GNOME/X11, autostart/perfis e overhead Docker continuam pendentes até verificação real.
-- XDG_SESSION_ID é opcional no diagnóstico desktop (ADRs 009/010). Sem ID, consultar somente User.Display do UID real do host e validar UID/tipo/classe/localidade/DISPLAY antes de LockedHint. Falha mantém fonte indisponível; preservar GNOME/X11. Não enumerar/selecionar outra sessão nem recuperar ambiente de outros processos.
+- XDG_SESSION_ID é opcional no diagnóstico desktop (ADRs 009/010/011). Sem ID, consultar somente User.Display do UID real do host e validar UID/tipo/classe/localidade/DISPLAY antes de LockedHint. Exclusivamente com Display vazio, ADR-011 permite associação por VT da raiz X11, seat0 ativo e releituras consistentes do mesmo candidato; Display preenchido divergente nunca usa essa alternativa. Falha mantém fonte indisponível; preservar GNOME/X11. Não enumerar/selecionar outra sessão nem recuperar ambiente de outros processos.
 
 ## Regras que a implementação deve preservar
 

@@ -1,6 +1,9 @@
 # ADR-010 — Sessão validada e consultas durante o ensaio
 
 Status: aceito para a etapa 1 do spike EP-02.
+Complemento vigente: [ADR-011](011-empty-display-vt-association.md) permite associação
+passiva adicional exclusivamente com Display vazio; os demais critérios e a
+seleção do candidato são preservados. Decisões/evidências abaixo são históricas.
 Requisitos: US-02.2/03, RF-04/05/16 e RNF-09/10.
 Complementa ADR-008 e substitui a ausência de descoberta do ADR-009.
 

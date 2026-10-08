@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from digitalmirror.doctor import Runner
+    from digitalmirror.doctor import CommandResult, Runner
 
 SERVICE = "org.freedesktop.login1"
 MANAGER = "/org/freedesktop/login1"
@@ -26,6 +26,9 @@ BUSCTL = [
 SESSION_PATH = re.compile(r"/org/freedesktop/login1/session/[a-zA-Z0-9_]+")
 USER_PATH = re.compile(r"/org/freedesktop/login1/user/[a-zA-Z0-9_]+")
 SESSION_ID = re.compile(r"[a-zA-Z0-9_-]{1,64}")
+IDENTITY_PROPERTIES = ["Id", "User", "Type", "Class", "Remote", "Display"]
+VT_PROPERTIES = ["VTNr", "Seat", "Active"]
+SEAT0_PATH = "/org/freedesktop/login1/seat/seat0"
 
 
 @dataclass(frozen=True)
@@ -52,8 +55,127 @@ def local_display(value: str) -> int | None:
     return int(match[1]) if match else None
 
 
+def _values(lines: list[str], signatures: tuple[str, ...]) -> list[object]:
+    if len(lines) != len(signatures):
+        raise ValueError("invalid-response")
+    return [json_value(line, signature) for line, signature in zip(lines, signatures, strict=True)]
+
+
+def _identity(lines: list[str]) -> list[object]:
+    values = _values(lines, ("s", "(uo)", "s", "s", "b", "s"))
+    session_id, user, session_type, session_class, remote, session_display = values
+    if (
+        not isinstance(session_id, str)
+        or not isinstance(user, list)
+        or len(user) != 2
+        or type(user[0]) is not int
+        or not isinstance(user[1], str)
+        or not USER_PATH.fullmatch(user[1])
+        or not isinstance(session_type, str)
+        or not isinstance(session_class, str)
+        or type(remote) is not bool
+        or not isinstance(session_display, str)
+    ):
+        raise ValueError("invalid-response")
+    return values
+
+
+def _vt_identity(lines: list[str]) -> tuple[int, list[str], bool]:
+    vt, seat, active = _values(lines, ("u", "(so)", "b"))
+    if (
+        type(vt) is not int
+        or not 0 <= vt < 2**32
+        or not isinstance(seat, list)
+        or len(seat) != 2
+        or not all(isinstance(value, str) for value in seat)
+        or type(active) is not bool
+    ):
+        raise ValueError("invalid-response")
+    return vt, seat, active
+
+
+def _x11_vt(output: str) -> int:
+    match = re.fullmatch(r"XFree86_VT\(INTEGER\) = ([1-9][0-9]{0,9})", output)
+    if not match or int(match[1]) >= 2**32:
+        raise ValueError("invalid-response")
+    return int(match[1])
+
+
+def _properties(path: str, fields: list[str], runner: Runner) -> CommandResult:
+    return runner(BUSCTL + ["get-property", SERVICE, path, SESSION_INTERFACE, *fields])
+
+
+def _vt_association(
+    path: str,
+    session_id: str,
+    identity: list[object],
+    runner: Runner,
+    diagnostics: dict[str, bool | str],
+) -> str | None:
+    diagnostics["vt_association_attempted"] = True
+    result = _properties(path, VT_PROPERTIES, runner)
+    if result.reason:
+        return result.reason
+    vt, seat, active = _vt_identity(result.output.splitlines())
+    checks = {
+        "identity_vt_positive": vt > 0,
+        "identity_seat_supported": seat == ["seat0", SEAT0_PATH],
+        "identity_session_active": active,
+    }
+    diagnostics.update(checks)
+    if not all(checks.values()):
+        return "session-identity-mismatch"
+    result = runner(["xprop", "-root", "XFree86_VT"])
+    if result.reason:
+        return result.reason
+    x11_vt = _x11_vt(result.output)
+    diagnostics["identity_vt_matches"] = x11_vt == vt
+    if x11_vt != vt:
+        return "session-identity-mismatch"
+    seat_query = BUSCTL + ["get-property", SERVICE, SEAT0_PATH, SERVICE + ".Seat", "ActiveSession"]
+    result = runner(seat_query)
+    if result.reason:
+        return result.reason
+    seat_session = json_value(result.output, "(so)")
+    if (
+        not isinstance(seat_session, list)
+        or len(seat_session) != 2
+        or not all(isinstance(value, str) for value in seat_session)
+    ):
+        raise ValueError("invalid-response")
+    diagnostics["identity_seat_session_matches"] = seat_session == [session_id, path]
+    if seat_session != [session_id, path]:
+        return "session-identity-mismatch"
+    # Releituras reduzem corridas; não representam snapshot atômico.
+    result = _properties(path, IDENTITY_PROPERTIES + VT_PROPERTIES, runner)
+    if result.reason:
+        return result.reason
+    lines = result.output.splitlines()
+    unchanged = _identity(lines[:6]) == identity and _vt_identity(lines[6:]) == (vt, seat, active)
+    diagnostics["identity_revalidation_matches"] = unchanged
+    if not unchanged:
+        return "session-identity-mismatch"
+    result = runner(["xprop", "-root", "XFree86_VT"])
+    if result.reason:
+        return result.reason
+    diagnostics["identity_x11_vt_stable"] = _x11_vt(result.output) == x11_vt
+    if not diagnostics["identity_x11_vt_stable"]:
+        return "session-identity-mismatch"
+    result = runner(seat_query)
+    if result.reason:
+        return result.reason
+    diagnostics["identity_seat_session_matches"] = json_value(result.output, "(so)") == seat_session
+    if not diagnostics["identity_seat_session_matches"]:
+        return "session-identity-mismatch"
+    return None
+
+
 def resolve_session(env: Mapping[str, str], runner: Runner) -> SessionResolution:
-    diagnostics: dict[str, bool | str] = {"candidate_source": "not-attempted"}
+    diagnostics: dict[str, bool | str] = {
+        "candidate_source": "not-attempted",
+        "session_association_source": "not-validated",
+        "vt_association_attempted": False,
+    }
 
     def failure(reason: str) -> SessionResolution:
         return SessionResolution(reason=reason, diagnostics=diagnostics)
@@ -117,44 +239,13 @@ def resolve_session(env: Mapping[str, str], runner: Runner) -> SessionResolution
             or path.rsplit("/", 1)[-1] in {"self", "auto"}
         ):
             raise ValueError("invalid-response")
-        result = runner(
-            BUSCTL
-            + [
-                "get-property",
-                SERVICE,
-                path,
-                SESSION_INTERFACE,
-                "Id",
-                "User",
-                "Type",
-                "Class",
-                "Remote",
-                "Display",
-            ]
-        )
+        result = _properties(path, IDENTITY_PROPERTIES, runner)
         if result.reason:
             return failure(result.reason)
-        lines = result.output.splitlines()
-        if len(lines) != 6:
-            raise ValueError("invalid-response")
-        values = [
-            json_value(line, signature)
-            for line, signature in zip(lines, ("s", "(uo)", "s", "s", "b", "s"), strict=True)
-        ]
+        values = _identity(result.output.splitlines())
         session_id, user, session_type, session_class, remote, session_display = values
-        if (
-            not isinstance(session_id, str)
-            or not isinstance(user, list)
-            or len(user) != 2
-            or type(user[0]) is not int
-            or not isinstance(user[1], str)
-            or not USER_PATH.fullmatch(user[1])
-            or not isinstance(session_type, str)
-            or not isinstance(session_class, str)
-            or type(remote) is not bool
-            or not isinstance(session_display, str)
-        ):
-            raise ValueError("invalid-response")
+        assert isinstance(session_id, str) and isinstance(user, list)
+        assert isinstance(session_display, str)
         observed_display = local_display(session_display)
         identity_checks = {
             "identity_id_matches": session_id == explicit,
@@ -172,8 +263,19 @@ def resolve_session(env: Mapping[str, str], runner: Runner) -> SessionResolution
             if observed_display is not None
             else "nonlocal-or-invalid"
         )
-        if not all(identity_checks.values()):
+        if not all(
+            value for key, value in identity_checks.items() if key != "identity_display_matches"
+        ):
             return failure("session-identity-mismatch")
+        if identity_checks["identity_display_matches"]:
+            diagnostics["session_association_source"] = "session-display"
+        elif session_display:
+            return failure("session-identity-mismatch")
+        else:
+            reason = _vt_association(path, session_id, values, runner, diagnostics)
+            if reason:
+                return failure(reason)
+            diagnostics["session_association_source"] = "x11-vt"
     except (ValueError, TypeError):
         return failure("invalid-response")
     return SessionResolution(

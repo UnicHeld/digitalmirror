@@ -83,10 +83,19 @@ correlacionado ao ciclo GNOME e estados true/false; suspensão/retomada manual
 correlacionada a um par PrepareForSleep, com revalidação e recuperação final das
 fontes. Foco vazio na consulta imediata de retomada permanece registrado.
 LockedHint acessível em consulta direta no host não comprova associação ao X11
-nem transições; o doctor continua rejeitando Session.Display vazio. Comparação
+nem transições; naquele ensaio o doctor rejeitava Session.Display vazio. Comparação
 de fontes e decisão final de adaptadores seguem pendentes em US-02.2.
 Precisão de foco/monitores, dois perfis, login/logout/instância única e custo de
 polling ainda precisam de validação. EP-02 In Progress, EP-03 Backlog e C0 pendente.
+
+Complemento local ADR-011 após evidência de VT coincidente no host/Compose:
+associação exclusivamente com Display vazio, cinco critérios válidos, VT/seat0/
+atividade e releituras consistentes do mesmo candidato. Formatter/lint/mypy,
+67 testes e build via Compose aprovados. Doctor real às 01:28:39 UTC de 08/10
+(22:28:39 local de 07/10) confirmou onze fontes read-ok, associação x11-vt e
+LockedHint=false coincidente com GNOME=false nessa leitura. Display continua vazio.
+Transições LockedHint e custo das consultas extras ainda pendentes; não encerra
+EP-02 ou C0.
 
 **Aceite:** relatório de fontes disponíveis e ausentes, precisão observada e custo básico. Diagnóstico é só leitura, sem mover foco ou gerar entradas. As fontes indisponíveis têm fallback definido ou estado desconhecido. Evidência do alvo real registrada sem conteúdo pessoal.
 

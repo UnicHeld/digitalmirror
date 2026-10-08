@@ -44,6 +44,14 @@
     manual antes do ensaio separado de suspensão/retomada (ADR-010).
 
 ADRs existentes preservados. ADR-006 limita uso de subprocessos ao spike.
+ADR-011 complementa exclusivamente Display vazio: verificar VT/seat/atividade
+do mesmo candidato e raiz X11, Seat.ActiveSession e releituras consistentes.
+Manter recusa de demais divergências; testar falhas/corridas/privacidade, executar
+checks/imagens via Compose e ensaios reais antes de aceitar LockedHint/transições.
+Extensão de diagnóstico do ADR-005: emitir booleano de atribuição ao principal
+com dados já lidos e principal único. Testar principal/secundário, maior interseção,
+geometria ausente, janela fora das telas e principal ausente/ambíguo. Depois dos
+checks/imagens, ensaios estáveis nas duas telas antes de instrumentar transições.
 Testes substituem o runner para cenários sintéticos; subprocessos reais só no doctor.
 Não adicionar resolução de abas sem extensão, armazenamento, serviço ou API.
 ADR-007 torna Docker/Compose obrigatório: dependências de sistema na imagem,

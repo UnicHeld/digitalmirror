@@ -95,6 +95,9 @@ O launcher valida os sockets/cookie antes de montar e não adivinha credenciais.
 `XDG_SESSION_ID` é opcional: na ausência, o doctor consulta somente User.Display
 do UID real do host fornecido pelo launcher. Valida ID, UID, tipo X11, classe user,
 sessão local e DISPLAY antes de ler LockedHint; erro mantém a fonte indisponível.
+Com Display exatamente vazio, o ADR-011 permite associação por VT da raiz X11,
+seat0 ativo e releituras consistentes do mesmo candidato. Não aceita Display
+preenchido divergente por esse caminho, nem altera o metadado no logind.
 Não exporte um ID arbitrário. O watcher consulta estados de bloqueio a cada 5s,
 resume coincidências/divergências e revalida fontes após pares de retomada e no
 fim (`post_watch_checks`). Essas leituras ficam fora das medições iniciais de CPU.

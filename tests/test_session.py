@@ -169,6 +169,13 @@ class SessionValidationTests(unittest.TestCase):
             with self.subTest(category=expected, display=display):
 
                 def runner(argv, display=display):
+                    if argv[-3:] == ["VTNr", "Seat", "Active"]:
+                        return CommandResult(
+                            "\n".join(
+                                json.dumps({"type": kind, "data": value})
+                                for kind, value in (("u", 0), ("(so)", ["", "/"]), ("b", False))
+                            )
+                        )
                     result = healthy_runner(argv)
                     if argv[-6:] == ["Id", "User", "Type", "Class", "Remote", "Display"]:
                         lines = result.output.splitlines()

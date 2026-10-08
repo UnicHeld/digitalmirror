@@ -80,6 +80,18 @@ completo das propriedades, e cada `false` identifica uma divergência:
 local válido, que ainda pode apontar para servidor diferente. Ausência dos campos
 de comparação significa que não chegaram a ser calculados; não implica aprovação.
 
+Complemento ADR-011: com Display exatamente vazio e cinco outros critérios
+válidos, o doctor tenta associação por VT, seat0 ativo e releituras. Nesse sucesso,
+identity_display_matches permanece false, session_display_status=empty e
+session_validated=true com session_association_source=x11-vt. Não foi preenchido
+Display nem ignorada divergência. Com Display correspondente, associação
+session-display; em falha, not-validated. vt_association_attempted e comparações
+identity_vt_*/identity_seat_*/identity_session_active/identity_revalidation_matches
+indicam etapas já lidas, sempre sem valores pessoais. Conferir os critérios do
+[ADR-011](adr/011-empty-display-vt-association.md); não concluir sucesso de campo
+ausente ou booleano isolado. Fonte disponível permite consulta/comparação de
+LockedHint, mas seu comportamento precisa de ensaio manual de bloqueio/retomada.
+
 No rootless detectado pelo launcher, `process_uid_is_root=true` e
 `host_uid_matches_process_uid=false` são esperados: UID 0 interno não substitui
 o UID real na associação. `identity_uid_matches` deve continuar true. Esses
@@ -90,10 +102,13 @@ automática para afrouxar o ADR-010; qualquer novo critério exige evidência e 
 Só depois da associação válida, ou decisão explícita e fundamentada de fallback
 GNOME, prosseguir aos ensaios separados de lock (120s) e suspensão/retomada (180s).
 
-Decisão registrada no ADR-010 em 07/10/2026: o candidato real passou em cinco
+Decisão histórica no ADR-010 em 07/10/2026: o candidato real passou em cinco
 comparações, mas Session.Display veio vazio. Preservar logind-lock indisponível;
 ensaiar o fallback GNOME existente conforme sequência abaixo. Não chamar SetDisplay
 ou alterar o login. Comparação com LockedHint permanece não validada.
+Complemento vigente ADR-011: tentar a associação adicional por VT/seat/atividade
+e releituras quando Display for vazio; se falhar, seguir esse fallback. Primeiro
+receber doctor simples reconstruído antes de ensaiar comparação de lock/retomada.
 
 1. Executar `sh scripts/compose-desktop run --rm desktop digitalmirror doctor --watch-seconds 120`.
    Aguardar cerca de 5s para conectar, manter desbloqueado por ≥15s, bloquear
@@ -118,6 +133,59 @@ do fallback, não liberar C0 ou a classificação do futuro coletor.
 
 ## Polling, monitores e precisão
 
+### Investigação passiva de Display vazio por VT
+
+Com Display vazio também confirmado no host, comparar o VT da sessão indicada
+por User.Display com o VT publicado pelo servidor Xorg. No terminal GNOME/X11:
+
+```bash
+digitalmirror_session_candidate=$(loginctl show-user "$(id -u)" --property=Display --value)
+loginctl show-session "$digitalmirror_session_candidate" --all --property=Display --property=VTNr --property=Service
+xprop -root XFree86_VT
+sh scripts/compose-desktop run --rm desktop xprop -root XFree86_VT
+```
+
+Prosseguir somente se User.Display indicar candidato não vazio; não substituir
+por ID fixo, self ou listagem. Não exportar XDG_SESSION_ID nem alterar DISPLAY.
+Essa consulta de propriedades no host não é validação do doctor/LockedHint; não
+altera sessão. Compartilhar resultados ou relações, sem nomes/cookies/ambiente.
+XFree86_VT não tem underscore inicial e é propriedade da raiz, não de uma janela.
+Falta da propriedade ou VT diferente impede usar essa hipótese como associação.
+Valores iguais são evidência para avaliar critério adicional, ainda exigindo
+identidade/localidade, seat/atividade, revalidação e ADR/spec antes do código.
+Não chamar SetDisplay/TakeControl ou alterar login para fabricar metadado.
+
+### Comparar monitores no host e no contêiner
+
+Antes de repetir polling, comparar as mesmas consultas no mesmo terminal
+GNOME/X11, sem conectar/desconectar telas ou mudar configuração entre comandos:
+
+```bash
+xrandr --listmonitors
+xrandr --listactivemonitors
+sh scripts/compose-desktop run --rm desktop xrandr --listmonitors
+sh scripts/compose-desktop run --rm desktop xrandr --listactivemonitors
+```
+
+São consultas passivas. Não alterar DISPLAY, usar sudo, instalar wlr-randr ou
+configurar saídas para produzir um resultado esperado. Informar se as duas telas
+estavam ligadas e exibindo o desktop em modo estendido ou espelhado. Para revisão,
+compartilhar somente a primeira linha `Monitors: N` de cada comando e eventuais
+erros; nomes de saídas, dimensões e posições não precisam ser publicados.
+
+Comparar host/contêiner separadamente para cada opção. Se houver divergência
+entre comandos equivalentes, investigar acesso/ambiente antes de atribuir a
+diferença à opção active ou ao parser. O parser do doctor exige que a contagem
+do cabeçalho corresponda a todas as linhas; não ignora um monitor silenciosamente.
+Resultados iguais só confirmam a contagem naquele instante. Não comprovam
+atribuição ao monitor secundário, precisão de foco ou comportamento após mudanças.
+
+Depois da comparação, repetir a medição abaixo mantendo a configuração das telas.
+O relatório mostra os detalhes de monitores somente da última amostra; suas
+contagens de disponibilidade não demonstram que a topologia foi constante.
+
+### Disponibilidade e custo básico de polling
+
 ```bash
 sh scripts/compose-desktop run --rm desktop digitalmirror doctor --samples 12 --interval 5
 ```
@@ -135,6 +203,30 @@ no monitor secundário. Mude o foco manualmente entre terminal, IDE e navegador,
 sem comandos de mudança de foco. O doctor só comprova disponibilidade, não registra
 transições de app; precisão nominal de até 5s é proposta, não medida por esse JSON.
 O futuro adaptador precisa de ensaio cronometrado de transições antes do aceite.
+Na extensão do ADR-005, `focused_window_on_primary` aparece somente com janela
+atribuída e principal único. true indica principal, false outro monitor; ausência
+significa classificação desconhecida. É detalhe apenas da última amostra, sem
+nomes ou geometria e sem alterar foco global. Leituras sequenciais podem observar
+transições; para testar atribuição, manter uma janela inteiramente em uma tela.
+
+Após reconstruir as imagens, executar doctor simples com terminal estável no
+monitor secundário. Para consultar uma janela na tela principal sem trazer o
+terminal ao foco durante a leitura, iniciar o comando com atraso:
+
+```bash
+sleep 10
+sh scripts/compose-desktop run --rm desktop
+```
+
+Colar as duas linhas juntas no terminal; durante os 10s, selecionar manualmente
+a janela na tela principal e mantê-la focada até a consulta terminar. Não minimizar
+o terminal nem usar comando que altere foco. Conferir count=2, primary_count=1,
+focused_window_assigned=true e focused_window_on_primary=false/true nos ensaios
+secundário/principal respectivamente, se as telas mantiverem esses papéis.
+O shell inicia Compose após o atraso; aguardar também a criação do contêiner.
+Comparar os resultados com o relato manual, sem inferir crédito de app/aba ou
+erro temporal de transições. Não repetir polling longo apenas para esse booleano.
+
 Falha de app não deve tornar a sessão automaticamente UNKNOWN; falta de sinais
 críticos de lock/idle deve. Desconexões não reutilizam o último foco.
 

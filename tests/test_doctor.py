@@ -125,6 +125,73 @@ class ParserTests(unittest.TestCase):
 
 
 class DoctorTests(unittest.TestCase):
+    def test_focused_monitor_classification_requires_assignment_and_unique_primary(self):
+        for geometry, monitors, expected, assigned in (
+            ("X=20\nY=10\nWIDTH=100\nHEIGHT=100", MONITORS, True, True),
+            ("X=-1000\nY=0\nWIDTH=900\nHEIGHT=600", MONITORS, False, True),
+            ("X=-100\nY=0\nWIDTH=300\nHEIGHT=200", MONITORS, True, True),
+            ("X=-200\nY=0\nWIDTH=300\nHEIGHT=200", MONITORS, False, True),
+            ("X=-10\nY=0\nWIDTH=20\nHEIGHT=20", MONITORS, True, True),
+            ("X=9000\nY=9000\nWIDTH=20\nHEIGHT=20", MONITORS, None, False),
+            ("invalid-private-geometry", MONITORS, None, False),
+            ("X=20\nY=10\nWIDTH=100\nHEIGHT=100", MONITORS.replace("+*", "+"), None, True),
+            (
+                "X=20\nY=10\nWIDTH=100\nHEIGHT=100",
+                MONITORS.replace("+DISPLAY-B", "+*DISPLAY-B"),
+                None,
+                True,
+            ),
+        ):
+            with self.subTest(geometry=geometry, monitors=monitors):
+                calls = []
+
+                def runner(argv, geometry=geometry, monitors=monitors, calls=calls):
+                    calls.append(argv)
+                    if argv[0] == "xdotool":
+                        return CommandResult(geometry)
+                    if argv[0] == "xrandr":
+                        return CommandResult(monitors)
+                    return healthy_runner(argv)
+
+                check = next(
+                    check
+                    for check in collect_checks(X11_ENV, runner)
+                    if check.source == "xrandr-monitors"
+                )
+                self.assertEqual(check.status, "available")
+                self.assertEqual(check.details["focused_window_assigned"], assigned)
+                if expected is None:
+                    self.assertNotIn("focused_window_on_primary", check.details)
+                else:
+                    self.assertIs(check.details["focused_window_on_primary"], expected)
+                self.assertEqual(calls.count(["xrandr", "--listactivemonitors"]), 1)
+                for private in ("DISPLAY-A", "DISPLAY-B", "private-geometry", "0x1234"):
+                    self.assertNotIn(private, repr(check))
+
+    def test_focused_monitor_unknown_after_missing_focus_or_geometry_query_failure(self):
+        for failed_command, failure in (
+            ("xprop", CommandResult("_NET_ACTIVE_WINDOW(WINDOW): window id # 0x0")),
+            ("xdotool", CommandResult(reason="timeout")),
+        ):
+            with self.subTest(command=failed_command):
+
+                def runner(argv, failed_command=failed_command, failure=failure):
+                    if argv[0] == failed_command:
+                        return failure
+                    return healthy_runner(argv)
+
+                checks = collect_checks(X11_ENV, runner)
+                check = next(check for check in checks if check.source == "xrandr-monitors")
+                self.assertEqual(check.status, "available")
+                self.assertFalse(check.details["focused_window_assigned"])
+                self.assertNotIn("focused_window_on_primary", check.details)
+        recovered = next(
+            check
+            for check in collect_checks(X11_ENV, healthy_runner)
+            if check.source == "xrandr-monitors"
+        )
+        self.assertIs(recovered.details["focused_window_on_primary"], False)
+
     def test_no_display_does_not_attempt_x11_or_session_bus(self):
         calls = []
 
